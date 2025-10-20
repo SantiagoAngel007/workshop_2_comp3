@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from "typeorm";
-import { User } from "./User";         
+import { User } from "./users.entity";         
 import { Permission } from "./permissions.entity";
 
 @Entity('roles')

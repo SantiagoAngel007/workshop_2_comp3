@@ -7,7 +7,7 @@ import {
   JoinTable,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Role } from "./Role"; // ← Asegúrate de que la ruta sea correcta
+import { Role } from "./roles.entity"; 
 
 @Entity()
 export class User {
@@ -23,7 +23,7 @@ export class User {
     @Column('text')
     fullName: string;
 
-    @Column('int') // ✅ CORREGIDO: 'number' → 'int'
+    @Column('int')
     age: number;
 
     @Column('text')
