@@ -1,5 +1,13 @@
-import { Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
@@ -8,8 +16,6 @@ import { LoginDto } from './dto/login.dto';
 import { Jwt } from './interfaces/jwt.interface';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from './entities/role.entity';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
 
 @Injectable()
 export class AuthService {
@@ -31,7 +37,6 @@ export class AuthService {
       password: this.encryptPassword(password),
     });
 
-    // Asignar rol por defecto 'cliente'
     const defaultRole = await this.roleRepository.findOneBy({ name: 'cliente' });
     if (!defaultRole) {
       throw new InternalServerErrorException('Rol por defecto "cliente" no encontrado');
@@ -55,7 +60,7 @@ export class AuthService {
 
     const user = await this.userRepository.findOne({
       where: { email },
-      select: { id: true, email: true, password: true },
+      select: { id: true, email: true, password: true, fullName: true, age: true, isActive: true },
       relations: ['roles'],
     });
 
@@ -74,6 +79,79 @@ export class AuthService {
     };
   }
 
+  async findAll() {
+    try {
+      const users = await this.userRepository.find({
+        relations: ['roles'],
+      });
+      return users.map(user => {
+        const { password, ...safeUser } = user;
+        return safeUser;
+      });
+    } catch (error) {
+      this.logger.error(error);
+      throw new InternalServerErrorException('Error retrieving users');
+    }
+  }
+
+  async findOne(id: string) {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['roles'],
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    delete user.password;
+    return user;
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    const user = await this.userRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    // Si se actualiza la contraseña, encriptarla
+    if (updateUserDto.password) {
+      updateUserDto.password = this.encryptPassword(updateUserDto.password);
+    }
+
+    try {
+      await this.userRepository.update(id, updateUserDto);
+      const updatedUser = await this.userRepository.findOne({
+        where: { id },
+        relations: ['roles'],
+      });
+
+      if (!updatedUser) {
+        throw new InternalServerErrorException('User updated but not found after update');
+      }
+
+      delete updatedUser.password;
+      return updatedUser;
+    } catch (error) {
+      this.handleException(error);
+    }
+  }
+
+  async remove(id: string) {
+    const user = await this.userRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    try {
+      await this.userRepository.delete(id);
+      return { message: `User with ID ${id} deleted successfully` };
+    } catch (error) {
+      this.logger.error(error);
+      throw new InternalServerErrorException('Error deleting user');
+    }
+  }
+
   encryptPassword(password: string): string {
     return bcrypt.hashSync(password, 10);
   }
@@ -85,7 +163,7 @@ export class AuthService {
   private handleException(error: any): never {
     this.logger.error(error);
     if (error.code === '23505') {
-      throw new InternalServerErrorException(error.detail);
+      throw new BadRequestException(error.detail);
     }
     throw new InternalServerErrorException('Unexpected error, check server logs');
   }
