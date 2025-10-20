@@ -1,39 +1,49 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import {
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  Entity,
+  ManyToMany,
+  JoinTable,
+  PrimaryGeneratedColumn,
+} from "typeorm";
+import { Role } from "./Role"; // ← Asegúrate de que la ruta sea correcta
 
 @Entity()
 export class User {
     @PrimaryGeneratedColumn('uuid')
-    id:string;
+    id: string;
 
     @Column({
         type: 'text',
         unique: true
     })
-    email:string;
+    email: string;
 
     @Column('text')
-    fullName:string;
+    fullName: string;
 
-    @Column('number')
-    age:number;
+    @Column('int') // ✅ CORREGIDO: 'number' → 'int'
+    age: number;
 
     @Column('text')
-    password?:string;
+    password?: string;
 
-    @Column('bool', {default: true})
+    @Column('bool', { default: true })
     isActive: boolean;
 
-    @Column({
-        type: 'text',
-        array: true,
-        default: ['cliente']
+    
+    @ManyToMany(() => Role, { eager: false })
+    @JoinTable({
+        name: 'user_roles',
+        joinColumn: { name: 'userId', referencedColumnName: 'id' },
+        inverseJoinColumn: { name: 'roleId', referencedColumnName: 'id' }
     })
-    roles: string[];
+    roles: Role[];
 
     @BeforeInsert()
     @BeforeUpdate()
-    checkFieldsBeforeChanges(){
+    checkFieldsBeforeChanges() {
         this.email = this.email.toLowerCase().trim();
     }
-
 }
