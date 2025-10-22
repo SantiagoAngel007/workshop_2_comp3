@@ -39,7 +39,7 @@ export class AuthService {
 
     const defaultRole = await this.roleRepository.findOneBy({ name: 'client' });
     if (!defaultRole) {
-      throw new InternalServerErrorException('Rol por defecto "cliente" no encontrado');
+      throw new InternalServerErrorException('Rol por defecto "client" no encontrado');
     }
     user.roles = [defaultRole];
 
@@ -109,12 +109,14 @@ export class AuthService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    const user = await this.userRepository.findOneBy({ id });
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['roles'],
+    });
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    // Si se actualiza la contraseña, encriptarla
     if (updateUserDto.password) {
       updateUserDto.password = this.encryptPassword(updateUserDto.password);
     }
@@ -138,9 +140,26 @@ export class AuthService {
   }
 
   async remove(id: string) {
-    const user = await this.userRepository.findOneBy({ id });
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['roles'],
+    });
+
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    const isAdmin = user.roles.some(role => role.name === 'admin');
+    if (isAdmin) {
+      const adminCount = await this.userRepository
+        .createQueryBuilder('user')
+        .innerJoin('user.roles', 'role')
+        .where('role.name = :role', { role: 'admin' })
+        .getCount();
+
+      if (adminCount <= 1) {
+        throw new BadRequestException('Cannot delete the last admin user');
+      }
     }
 
     try {
