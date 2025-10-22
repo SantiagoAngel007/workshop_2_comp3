@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable } from "typeorm";
 import { User } from "./users.entity";         
 import { Permission } from "./permissions.entity";
+import { ValidRoles } from "../enums/roles.enum";
 
 @Entity('roles')
 export class Role {
@@ -11,7 +12,7 @@ export class Role {
         type: 'text',
         unique: true
     })
-    name: string;
+    name: ValidRoles;
 
     
     @ManyToMany(() => User, user => user.roles)

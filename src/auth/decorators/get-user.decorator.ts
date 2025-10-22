@@ -1,15 +1,13 @@
+import { createParamDecorator, ExecutionContext, InternalServerErrorException } from "@nestjs/common";
+import * as request from 'supertest';
 
-import { createParamDecorator, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 
 export const GetUser = createParamDecorator(
-  (data: unknown, context: ExecutionContext) => {
-    const request = context.switchToHttp().getRequest();
-    const user = request.user;
+    (data, context: ExecutionContext) =>{
+        const request = context.switchToHttp().getRequest();
+        const user = request.user;
+        if(!user) throw new InternalServerErrorException(`User not found`);
 
-    if (!user) {
-      throw new UnauthorizedException('User not found in request');
+        return user;
     }
-
-    return user;
-  }
-);
+)
