@@ -3,6 +3,8 @@ import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { LoginDto } from './dto/login.dto';
+import { Auth } from './decorators/auth.decorator';
+import { ValidRoles } from './enums/roles.enum';
 
 @Controller('auth')
 export class AuthController {
@@ -29,11 +31,13 @@ export class AuthController {
   }
 
   @Patch(':id')
+  @Auth(ValidRoles.admin)
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.authService.update(id, updateUserDto);
   }
 
   @Delete(':id')
+  @Auth(ValidRoles.admin)
   remove(@Param('id') id: string) {
     return this.authService.remove(id);
   }
