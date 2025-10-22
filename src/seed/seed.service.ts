@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { AuthService } from '../auth/auth.service';
 import { Role } from '../auth/entities/roles.entity';
-import { User } from '../auth/entities/users.entity';
 import { initialData } from './data/seed-auth.data';
+
 
 @Injectable()
 export class SeedService {

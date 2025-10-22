@@ -1,4 +1,5 @@
-import { ValidRoles } from '../enums/roles.enum';
+import { ValidRoles } from "src/auth/enums/roles.enum";
+
 
 export interface SeedData {
   roles: string[];
