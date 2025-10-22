@@ -37,7 +37,7 @@ export class AuthService {
       password: this.encryptPassword(password),
     });
 
-    const defaultRole = await this.roleRepository.findOneBy({ name: 'cliente' });
+    const defaultRole = await this.roleRepository.findOneBy({ name: 'client' });
     if (!defaultRole) {
       throw new InternalServerErrorException('Rol por defecto "cliente" no encontrado');
     }
