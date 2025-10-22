@@ -1,8 +1,7 @@
 import { ValidRoles } from "src/auth/enums/roles.enum";
 
-
 export interface SeedData {
-  roles: string[];
+  roles: ValidRoles[];
   users: {
     email: string;
     fullName: string;
@@ -13,35 +12,40 @@ export interface SeedData {
 }
 
 export const initialData: SeedData = {
-  roles: ['admin', 'coach', 'client', 'receptionist'],
+  roles: [
+    ValidRoles.admin,
+    ValidRoles.coach,
+    ValidRoles.client,
+    ValidRoles.receptionist,
+  ],
   users: [
     {
       email: 'admin@example.com',
       fullName: 'Admin User',
       age: 30,
       password: 'admin123',
-      roles: ['admin'],
+      roles: [ValidRoles.admin],
     },
     {
       email: 'coach@example.com',
       fullName: 'Coach User',
       age: 28,
       password: 'coach123',
-      roles: ['coach'],
+      roles: [ValidRoles.coach],
     },
     {
       email: 'client@example.com',
       fullName: 'Client User',
       age: 25,
       password: 'client123',
-      roles: ['client'],
+      roles: [ValidRoles.client],
     },
     {
       email: 'receptionist@example.com',
       fullName: 'Receptionist User',
       age: 27,
       password: 'recep123',
-      roles: ['receptionist'],
+      roles: [ValidRoles.receptionist],
     },
   ],
 };
