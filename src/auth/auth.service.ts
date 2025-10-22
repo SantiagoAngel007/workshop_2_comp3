@@ -16,6 +16,7 @@ import { LoginDto } from './dto/login.dto';
 import { Jwt } from './interfaces/jwt.interface';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from './entities/roles.entity';
+import { ValidRoles } from './enums/roles.enum';
 
 @Injectable()
 export class AuthService {
@@ -37,7 +38,7 @@ export class AuthService {
       password: this.encryptPassword(password),
     });
 
-    const defaultRole = await this.roleRepository.findOneBy({ name: 'client' });
+    const defaultRole = await this.roleRepository.findOneBy({ name: ValidRoles.client });
     if (!defaultRole) {
       throw new InternalServerErrorException('Rol por defecto "client" no encontrado');
     }
