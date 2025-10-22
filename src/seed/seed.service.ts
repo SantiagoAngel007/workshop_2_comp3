@@ -16,7 +16,7 @@ export class SeedService {
   }
 
   private async deleteAllUsersAndRoles() {
-    // En TypeORM, si tienes relaciones, es mejor eliminar usuarios primero
+    
     await this.authService.userRepository.clear();
     await this.authService.roleRepository.clear();
   }
@@ -32,13 +32,12 @@ export class SeedService {
     for (const userData of initialData.users) {
       const { roles, ...rest } = userData;
 
-      // Crea el usuario
+      
       const user = this.authService.userRepository.create({
         ...rest,
         password: this.authService.encryptPassword(rest.password),
       });
 
-      // Asigna los roles
       const assignedRoles = await Promise.all(
         roles.map((roleName) =>
           this.authService.roleRepository.findOneBy({ name: roleName }),

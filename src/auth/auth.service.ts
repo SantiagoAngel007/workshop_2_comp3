@@ -24,10 +24,10 @@ export class AuthService {
 
   constructor(
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
+    public readonly userRepository: Repository<User>,
     @InjectRepository(Role)
-    private readonly roleRepository: Repository<Role>,
-    private readonly jwtService: JwtService,
+    public readonly roleRepository: Repository<Role>,
+    public readonly jwtService: JwtService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
