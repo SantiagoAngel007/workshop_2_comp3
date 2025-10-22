@@ -10,6 +10,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService  } from '@nestjs/config';
 import { User } from './auth/entities/users.entity';
 import { Role } from './auth/entities/roles.entity';
+import { SeedModule } from './seed/seed.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { Role } from './auth/entities/roles.entity';
     AuthModule,
     SubscriptionsModule,
     AttendancesModule,
+    SeedModule,
   ],
   controllers: [AppController],
   providers: [AppService],
