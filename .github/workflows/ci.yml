@@ -58,7 +58,7 @@ jobs:
         run: npm run build
 
       # 7. Ejecutar pruebas unitarias con coverage
-      - name: Run unit tests
+      - name: Run unit tests with coverage
         run: npm run test:cov
         env:
           POSTGRES_HOST: localhost
@@ -68,14 +68,43 @@ jobs:
           POSTGRES_DB: test_db
           JWT_SECRET: test-jwt-secret-key-for-ci
 
-      # 8. Subir reporte de cobertura (opcional)
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
-        if: success()
+      # 8. Mostrar reporte de cobertura en los logs
+      - name: Display coverage report
+        if: always()
+        run: |
+          echo "============================================"
+          echo "COVERAGE REPORT"
+          echo "============================================"
+          if [ -f coverage/coverage-summary.json ]; then
+            cat coverage/coverage-summary.json | node -e "
+              const data = JSON.parse(require('fs').readFileSync(0, 'utf-8'));
+              const total = data.total;
+              console.log('');
+              console.log('Overall Coverage Summary:');
+              console.log('─────────────────────────────────────────');
+              console.log('Lines      : ' + total.lines.pct + '%');
+              console.log('Statements : ' + total.statements.pct + '%');
+              console.log('Functions  : ' + total.functions.pct + '%');
+              console.log('Branches   : ' + total.branches.pct + '%');
+              console.log('─────────────────────────────────────────');
+            "
+          fi
+          echo ""
+          echo "Detailed Coverage by File:"
+          echo "─────────────────────────────────────────"
+          cat coverage/lcov.info | grep -E "(SF:|DA:)" | head -50 || echo "No detailed coverage available"
+          echo "─────────────────────────────────────────"
+          echo ""
+          echo "Full coverage report available in: coverage/lcov-report/index.html"
+
+      # 9. Subir reporte de cobertura como artefacto
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        if: always()
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
-        continue-on-error: true
+          name: coverage-report
+          path: coverage/
+          retention-days: 30
 
   # Job 2: Validar Docker build (opcional)
   docker:
