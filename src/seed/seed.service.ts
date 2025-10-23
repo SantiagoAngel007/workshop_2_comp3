@@ -17,8 +17,15 @@ export class SeedService {
 
   private async deleteAllUsersAndRoles() {
     
-    await this.authService.userRepository.clear();
-    await this.authService.roleRepository.clear();
+  await this.authService.userRepository.query(`ALTER TABLE "user_roles" DISABLE TRIGGER ALL`);
+  
+  await this.authService.userRepository.query(`DELETE FROM "user_roles"`);
+  
+  await this.authService.userRepository.query(`DELETE FROM "user"`);
+  
+  await this.authService.roleRepository.query(`DELETE FROM "roles"`);
+
+  await this.authService.userRepository.query(`ALTER TABLE "user_roles" ENABLE TRIGGER ALL`);
   }
 
   private async insertRoles() {

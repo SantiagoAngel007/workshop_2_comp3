@@ -1,0 +1,233 @@
+{
+  "info": {
+    "name": "Workshop 2 - Gym API (Con Seeds)",
+    "description": "API para pruebas de endpoints del workshop con datos iniciales",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "🌱 SEED - Generar datos iniciales",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/seed",
+          "host": ["{{base_url}}"],
+          "path": ["seed"]
+        },
+        "description": "Crea 4 roles y 4 usuarios de prueba\n\nCredenciales después de ejecutar:\n- admin@example.com / admin123 (admin)\n- coach@example.com / coach123 (coach)\n- client@example.com / client123 (client)\n- receptionist@example.com / recep123 (receptionist)"
+      },
+      "response": []
+    },
+    {
+      "name": "🔐 AUTH",
+      "item": [
+        {
+          "name": "Register - Crear usuario",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"usuario@example.com\",\n  \"fullName\": \"Usuario Nuevo\",\n  \"age\": 25,\n  \"password\": \"Password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Registra un nuevo usuario con rol 'client' por defecto"
+          },
+          "response": []
+        },
+        {
+          "name": "Login - Obtener Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Guarda el token automáticamente\n",
+                  "if (pm.response.code === 200 || pm.response.code === 201) {\n",
+                  "    var jsonData = pm.response.json();\n",
+                  "    pm.collectionVariables.set('token', jsonData.token);\n",
+                  "    pm.collectionVariables.set('user_id', jsonData.id);\n",
+                  "    console.log('✅ Token guardado:', jsonData.token.substring(0, 20) + '...');\n",
+                  "    console.log('✅ User ID guardado:', jsonData.id);\n",
+                  "}\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Inicia sesión y obtiene un token JWT\n\n⚠️ IMPORTANTE: Este request guarda el token automáticamente en la variable {{token}}"
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Obtener todos los usuarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth",
+              "host": ["{{base_url}}"],
+              "path": ["auth"]
+            },
+            "description": "Obtiene la lista completa de usuarios\n\n⚠️ Requiere token válido en header Authorization"
+          },
+          "response": []
+        },
+        {
+          "name": "GET - Obtener usuario por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "{{user_id}}"]
+            },
+            "description": "Obtiene un usuario específico por su ID\n\n⚠️ Usa la variable {{user_id}} que se guarda al hacer login"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH - Actualizar usuario",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Nombre Actualizado\",\n  \"age\": 31\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "{{user_id}}"]
+            },
+            "description": "Actualiza los datos de un usuario\n\n⚠️ Solo admins pueden actualizar otros usuarios"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE - Eliminar usuario",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "{{user_id}}"]
+            },
+            "description": "Elimina un usuario\n\n⚠️ Solo admins pueden eliminar usuarios\n⚠️ No se puede eliminar si es el último admin"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📋 REFERENCIA - Credenciales después de Seed",
+      "item": [
+        {
+          "name": "ℹ️ LEER - Credenciales disponibles",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/seed",
+              "host": ["{{base_url}}"],
+              "path": ["seed"]
+            },
+            "description": "DESPUÉS DE EJECUTAR /seed, estas credenciales estarán disponibles:\n\n| Email | Contraseña | Rol |\n|-------|-----------|-----|\n| admin@example.com | admin123 | admin |\n| coach@example.com | coach123 | coach |\n| client@example.com | client123 | client |\n| receptionist@example.com | recep123 | receptionist |\n\n**IMPORTANTE:**\n1. Primero ejecuta el endpoint /seed (arriba en esta colección)\n2. Luego puedes hacer login con cualquiera de estas credenciales\n3. El token expira en 1 hora\n4. Para refrescar datos, ejecuta /seed de nuevo"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": []
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": []
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "JWT Token - Se guarda automáticamente al hacer login"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string",
+      "description": "ID del usuario - Se guarda automáticamente al hacer login"
+    }
+  ]
+}
