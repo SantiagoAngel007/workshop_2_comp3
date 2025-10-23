@@ -5,11 +5,11 @@ import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException } from '@nestjs/common';
+import { Jwt } from '../interfaces/jwt.interface';
 
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
   let userRepository: Repository<User>;
-  let configService: ConfigService;
 
   const mockUser = {
     id: 'uuid1',
@@ -39,15 +39,14 @@ describe('JwtStrategy', () => {
 
     strategy = module.get<JwtStrategy>(JwtStrategy);
     userRepository = module.get<Repository<User>>(getRepositoryToken(User));
-    configService = module.get<ConfigService>(ConfigService);
   });
 
   describe('validate', () => {
     it('should return user if token is valid and user is active', async () => {
-      const payload = { id: 'uuid1', email: 'test@example.com' };
-      jest.spyOn(userRepository, 'findOne').mockResolvedValue(mockUser as any);
+      const payload: Jwt = { id: 'uuid1', email: 'test@example.com' };
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(mockUser as User);
 
-      const result = await strategy.validate(payload as any);
+      const result = await strategy.validate(payload);
 
       expect(result).toEqual(mockUser);
       expect(userRepository.findOne).toHaveBeenCalledWith({
@@ -57,18 +56,18 @@ describe('JwtStrategy', () => {
     });
 
     it('should throw UnauthorizedException if user not found', async () => {
-      const payload = { id: 'uuid1', email: 'test@example.com' };
+      const payload: Jwt = { id: 'uuid1', email: 'test@example.com' };
       jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
 
-      await expect(strategy.validate(payload as any)).rejects.toThrow(UnauthorizedException);
+      await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
     });
 
     it('should throw UnauthorizedException if user is inactive', async () => {
-      const payload = { id: 'uuid1', email: 'test@example.com' };
+      const payload: Jwt = { id: 'uuid1', email: 'test@example.com' };
       const inactiveUser = { ...mockUser, isActive: false };
-      jest.spyOn(userRepository, 'findOne').mockResolvedValue(inactiveUser as any);
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(inactiveUser as User);
 
-      await expect(strategy.validate(payload as any)).rejects.toThrow(UnauthorizedException);
+      await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
     });
   });
 });

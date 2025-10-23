@@ -1,11 +1,9 @@
 import { createParamDecorator, ExecutionContext, InternalServerErrorException } from "@nestjs/common";
-import * as request from 'supertest';
-
 
 export const GetUser = createParamDecorator(
-    (data, context: ExecutionContext) =>{
-        const request = context.switchToHttp().getRequest();
-        const user = request.user;
+    (_data: unknown, context: ExecutionContext) =>{
+        const req = context.switchToHttp().getRequest();
+        const user = req.user;
         if(!user) throw new InternalServerErrorException(`User not found`);
 
         return user;
