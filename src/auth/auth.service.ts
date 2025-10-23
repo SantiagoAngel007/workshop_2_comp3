@@ -5,6 +5,7 @@ import {
   NotFoundException,
   UnauthorizedException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -109,36 +110,60 @@ export class AuthService {
     return user;
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
-    const user = await this.userRepository.findOne({
-      where: { id },
-      relations: ['roles'],
+  async update(
+  idToUpdate: string,
+  updateUserDto: UpdateUserDto,
+  authUser: User,
+) {
+  const userToUpdate = await this.userRepository.findOne({
+    where: { id: idToUpdate },
+    relations: ['roles'],
+  });
+
+  if (!userToUpdate) {
+    throw new NotFoundException(`User with ID ${idToUpdate} not found`);
+  }
+
+  const isAdmin = authUser.roles.some(role => role.name === ValidRoles.admin);
+
+  if (!isAdmin && authUser.id !== idToUpdate) {
+    throw new ForbiddenException(
+      `You can only update your own profile. You cannot update other users.`
+    );
+  }
+
+  if (updateUserDto.email && updateUserDto.email !== userToUpdate.email) {
+    const existingUser = await this.userRepository.findOneBy({
+      email: updateUserDto.email,
     });
-    if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
-    }
-
-    if (updateUserDto.password) {
-      updateUserDto.password = this.encryptPassword(updateUserDto.password);
-    }
-
-    try {
-      await this.userRepository.update(id, updateUserDto);
-      const updatedUser = await this.userRepository.findOne({
-        where: { id },
-        relations: ['roles'],
-      });
-
-      if (!updatedUser) {
-        throw new InternalServerErrorException('User updated but not found after update');
-      }
-
-      delete updatedUser.password;
-      return updatedUser;
-    } catch (error) {
-      this.handleException(error);
+    if (existingUser) {
+      throw new BadRequestException('Email already in use');
     }
   }
+
+  if (updateUserDto.password) {
+    updateUserDto.password = this.encryptPassword(updateUserDto.password);
+  }
+
+  try {
+    await this.userRepository.update(idToUpdate, updateUserDto);
+    const updatedUser = await this.userRepository.findOne({
+      where: { id: idToUpdate },
+      relations: ['roles'],
+    });
+
+    if (!updatedUser) {
+      throw new InternalServerErrorException(
+        'User updated but not found after update'
+      );
+    }
+
+    delete updatedUser.password;
+    return updatedUser;
+  } catch (error) {
+    this.handleException(error);
+  }
+}
 
   async remove(id: string) {
     const user = await this.userRepository.findOne({
