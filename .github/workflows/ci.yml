@@ -1,0 +1,100 @@
+name: CI Pipeline
+
+# Se ejecuta en push a main/develop y en todos los PRs
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # Job 1: Validar código y pruebas
+  test:
+    name: Test & Lint
+    runs-on: ubuntu-latest
+
+    # Servicio de PostgreSQL para las pruebas
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      # 1. Checkout del código
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Setup de Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 3. Instalar dependencias
+      - name: Install dependencies
+        run: npm ci
+
+      # 4. Linter (ESLint)
+      - name: Run ESLint
+        run: npm run lint
+
+      # 5. Formateo (Prettier check)
+      - name: Check code formatting
+        run: npx prettier --check "src/**/*.ts" "test/**/*.ts"
+
+      # 6. Build del proyecto
+      - name: Build project
+        run: npm run build
+
+      # 7. Ejecutar pruebas unitarias con coverage
+      - name: Run unit tests
+        run: npm run test:cov
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+          JWT_SECRET: test-jwt-secret-key-for-ci
+
+      # 8. Subir reporte de cobertura (opcional)
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: success()
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+        continue-on-error: true
+
+  # Job 2: Validar Docker build (opcional)
+  docker:
+    name: Docker Build Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check if Dockerfile exists
+        id: check_dockerfile
+        run: |
+          if [ -f "Dockerfile" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build Docker image
+        if: steps.check_dockerfile.outputs.exists == 'true'
+        run: docker build -t workshop-app:test .
