@@ -43,7 +43,7 @@ export class Subscription {
   @ManyToOne(() => User, (user) => user.subscriptions, { onDelete: 'CASCADE' })
   user: User;
 
-  @ManyToMany(() => Membership, { eager: false })
+  @ManyToMany(() => Membership, (membership) => membership.subscriptions, { eager: false })
   @JoinTable({
     name: 'subscription_memberships',
     joinColumn: { name: 'subscriptionId', referencedColumnName: 'id' },
