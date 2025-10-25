@@ -14,20 +14,16 @@ export class MembershipsService {
   constructor(
     @InjectRepository(Membership)
     private readonly membershipRepository: Repository<Membership>,
-  ) {}
+  ) { }
 
-  /**
-   * Obtiene todas las membresías
-   */
+  //todas las membresías
   async findAll(): Promise<Membership[]> {
     return await this.membershipRepository.find({
       order: { created_at: 'DESC' },
     });
   }
 
-  /**
-   * Busca una membresía por ID
-   */
+  //una membresía por id
   async findMembershipById(membershipId: string): Promise<Membership> {
     const membership = await this.membershipRepository.findOne({
       where: { id: membershipId },
@@ -40,16 +36,14 @@ export class MembershipsService {
     return membership;
   }
 
-  /**
-   * Crea una nueva membresía
-   */
+  //crear una nueva membresía
   async createNewMembership(
     createMembershipDto: CreateMembershipDto,
   ): Promise<Membership> {
-    // Validar que el nombre no exista
+
     await this.validateNameIsUnique(createMembershipDto.name);
 
-    // Crear la membresía (TypeORM genera el UUID automáticamente)
+    // crear la membresía (TypeORM genera el UUID automáticamente)
     const newMembership = this.membershipRepository.create({
       ...createMembershipDto,
       status: createMembershipDto.status ?? true,
@@ -58,17 +52,15 @@ export class MembershipsService {
     return await this.membershipRepository.save(newMembership);
   }
 
-  /**
-   * Actualiza una membresía existente
-   */
+  //actualizar una membresía existente
   async updateExistingMembership(
     membershipId: string,
     updateMembershipDto: UpdateMembershipDto,
   ): Promise<Membership> {
-    // Verificar que la membresía existe
+    // verificar que la membresía existe
     const existingMembership = await this.findMembershipById(membershipId);
 
-    // Si se actualiza el nombre, validar que no exista otro con ese nombre
+    // si se actualiza el nombre, validar que no exista otro con ese nombre
     if (
       updateMembershipDto.name &&
       updateMembershipDto.name !== existingMembership.name
@@ -76,23 +68,19 @@ export class MembershipsService {
       await this.validateNameIsUnique(updateMembershipDto.name);
     }
 
-    // Aplicar actualizaciones
+    //aplicar actualizaciones
     Object.assign(existingMembership, updateMembershipDto);
 
     return await this.membershipRepository.save(existingMembership);
   }
 
-  /**
-   * Elimina una membresía
-   */
+  //eliminar una membresía
   async removeMembership(membershipId: string): Promise<void> {
     const membershipToDelete = await this.findMembershipById(membershipId);
     await this.membershipRepository.remove(membershipToDelete);
   }
 
-  /**
-   * Cambia el estado activo/inactivo de una membresía
-   */
+  //cambiar el estado activo/inactivo de una membresía
   async toggleMembershipStatus(membershipId: string): Promise<Membership> {
     const membership = await this.findMembershipById(membershipId);
 
@@ -101,10 +89,7 @@ export class MembershipsService {
     return await this.membershipRepository.save(membership);
   }
 
-  /**
-   * Valida que el nombre de la membresía sea único
-   * @private
-   */
+  //validar que el nombre de la membresía sea único
   private async validateNameIsUnique(name: string): Promise<void> {
     const existingMembership = await this.membershipRepository.findOne({
       where: { name },
