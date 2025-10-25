@@ -8,6 +8,7 @@ import {
   Entity,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   ManyToOne,
 } from 'typeorm';
 
@@ -34,11 +35,17 @@ export class Subscription {
   @Column('date')
   purchase_date: Date;
 
+  @Column('boolean', { default: true })
+  is_active: boolean;
+
   @CreateDateColumn()
   created_at: Date;
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  @DeleteDateColumn()
+  deleted_at: Date;
 
   @ManyToOne(() => User, (user) => user.subscriptions, { onDelete: 'CASCADE' })
   user: User;

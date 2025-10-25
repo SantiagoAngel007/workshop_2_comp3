@@ -6,6 +6,7 @@ import {
   Entity,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
 
 @Entity()
@@ -36,6 +37,9 @@ export class Membership {
 
   @UpdateDateColumn()
   updated_at: Date;
+
+  @DeleteDateColumn()
+  deleted_at: Date;
 
   @ManyToMany(() => Subscription, (subscription) => subscription.memberships, { eager: false })
   subscriptions: Subscription[];

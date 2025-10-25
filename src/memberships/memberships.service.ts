@@ -74,10 +74,10 @@ export class MembershipsService {
     return await this.membershipRepository.save(existingMembership);
   }
 
-  //eliminar una membresía
+  //eliminar una membresía (soft delete)
   async removeMembership(membershipId: string): Promise<void> {
     const membershipToDelete = await this.findMembershipById(membershipId);
-    await this.membershipRepository.remove(membershipToDelete);
+    await this.membershipRepository.softRemove(membershipToDelete);
   }
 
   //cambiar el estado activo/inactivo de una membresía
