@@ -45,6 +45,20 @@ export class SubscriptionsService {
   }
 
   /**
+   * Verifica si un usuario tiene una subscripción activa
+   */
+  async hasActiveSubscription(userId: string): Promise<boolean> {
+    const activeSubscription = await this.subscriptionRepository.findOne({
+      where: {
+        user: { id: userId },
+        is_active: true,
+      },
+    });
+
+    return !!activeSubscription;
+  }
+
+  /**
    * Crea una subscripción para un usuario
    */
   async createSubscriptionForUser(userId: string): Promise<Subscription> {
@@ -54,13 +68,13 @@ export class SubscriptionsService {
       throw new NotFoundException('User not found');
     }
 
-    // Verificar si ya existe una subscripción para este usuario
-    const existingSubscription = await this.subscriptionRepository.findOne({
-      where: { user: { id: user.id } },
-    });
+    // Verificar si el usuario ya tiene una subscripción activa
+    const hasActive = await this.hasActiveSubscription(userId);
 
-    if (existingSubscription) {
-      throw new ConflictException('User already has a subscription');
+    if (hasActive) {
+      throw new ConflictException(
+        'El usuario ya tiene una subscripción activa. Debe esperar a que caduque antes de adquirir una nueva.',
+      );
     }
 
     // Crear nueva subscripción vacía (sin membresías inicialmente)
@@ -71,6 +85,7 @@ export class SubscriptionsService {
       max_gym_assistance: 0,
       duration_months: 0,
       purchase_date: new Date(),
+      is_active: true,
       user,
       memberships: [],
     });
@@ -176,10 +191,41 @@ export class SubscriptionsService {
   }
 
   /**
-   * Elimina una subscripción
+   * Desactiva una subscripción (cuando expira o se cancela)
+   */
+  async deactivateSubscription(id: string): Promise<Subscription> {
+    const subscription = await this.findOne(id);
+
+    subscription.is_active = false;
+
+    return await this.subscriptionRepository.save(subscription);
+  }
+
+  /**
+   * Activa una subscripción
+   */
+  async activateSubscription(id: string): Promise<Subscription> {
+    const subscription = await this.findOne(id);
+
+    // Verificar si el usuario ya tiene otra subscripción activa
+    const hasActive = await this.hasActiveSubscription(subscription.user.id);
+
+    if (hasActive) {
+      throw new ConflictException(
+        'El usuario ya tiene una subscripción activa.',
+      );
+    }
+
+    subscription.is_active = true;
+
+    return await this.subscriptionRepository.save(subscription);
+  }
+
+  /**
+   * Elimina una subscripción (soft delete)
    */
   async remove(id: string): Promise<void> {
     const subscription = await this.findOne(id);
-    await this.subscriptionRepository.remove(subscription);
+    await this.subscriptionRepository.softRemove(subscription);
   }
 }
