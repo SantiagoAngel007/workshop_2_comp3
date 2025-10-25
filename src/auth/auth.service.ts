@@ -6,6 +6,8 @@ import {
   UnauthorizedException,
   BadRequestException,
   ForbiddenException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -18,6 +20,7 @@ import { Jwt } from './interfaces/jwt.interface';
 import { JwtService } from '@nestjs/jwt';
 import { Role } from './entities/roles.entity';
 import { ValidRoles } from './enums/roles.enum';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 
 @Injectable()
 export class AuthService {
@@ -29,6 +32,8 @@ export class AuthService {
     @InjectRepository(Role)
     public readonly roleRepository: Repository<Role>,
     public readonly jwtService: JwtService,
+    @Inject(forwardRef(() => SubscriptionsService))
+    private readonly subscriptionsService: SubscriptionsService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -47,6 +52,15 @@ export class AuthService {
 
     try {
       await this.userRepository.save(user);
+      
+      // Crear subscripción vacía automáticamente
+      try {
+        await this.subscriptionsService.createSubscriptionForUser(user.id);
+      } catch (subscriptionError) {
+        this.logger.warn(`Failed to create subscription for user ${user.id}`, subscriptionError);
+        // No falla el registro si falla la creación de la subscripción
+      }
+      
       delete user.password;
       return {
         ...user,
