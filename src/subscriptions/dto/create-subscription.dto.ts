@@ -1,5 +1,12 @@
-
-import { IsString, IsNumber, IsInt, IsDate, Min, IsArray, IsUUID } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsInt,
+  IsDate,
+  Min,
+  IsArray,
+  IsUUID,
+} from 'class-validator';
 
 export class CreateSubscriptionDto {
   @IsString()

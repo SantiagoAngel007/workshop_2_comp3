@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -8,6 +8,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
 
 @Module({
   controllers: [AuthController],
@@ -23,8 +24,9 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         signOptions: { expiresIn: '1h' },
       }),
     }),
+    forwardRef(() => SubscriptionsModule),
   ],
   providers: [AuthService, JwtStrategy],
-  exports: [AuthService, JwtModule, TypeOrmModule],
+  exports: [AuthService, JwtModule, TypeOrmModule, PassportModule, JwtStrategy],
 })
 export class AuthModule {}
