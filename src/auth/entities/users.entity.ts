@@ -6,8 +6,10 @@ import {
   ManyToMany,
   JoinTable,
   PrimaryGeneratedColumn,
+  OneToMany,
 } from "typeorm";
 import { Role } from "./roles.entity"; 
+import { Subscription } from "src/subscriptions/entities/subscription.entity";
 
 @Entity()
 export class User {
@@ -32,6 +34,8 @@ export class User {
     @Column('bool', { default: true })
     isActive: boolean;
 
+    @OneToMany(() => Subscription, subscription => subscription.user, { eager: false })
+    subscriptions: Subscription[];
     
     @ManyToMany(() => Role, { eager: false })
     @JoinTable({
