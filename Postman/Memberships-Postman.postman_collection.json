@@ -1,0 +1,435 @@
+{
+	"info": {
+		"_postman_id": "15393c41-853f-4f80-925b-88d0d5ec3879",
+		"name": "Memberships-Postman",
+		"description": "Colección completa con Seed, Auth y Memberships CRUD",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38815455"
+	},
+	"item": [
+		{
+			"name": "SEED",
+			"item": [
+				{
+					"name": "Ejecutar Seed (Poblar BD)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/seed",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"seed"
+							]
+						},
+						"description": "Ejecuta el seed para poblar la base de datos con usuarios, roles y membresías de prueba"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "AUTH",
+			"item": [
+				{
+					"name": "Login - Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('admin_token', jsonData.token);",
+									"    console.log('✅ Admin Token guardado');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login como admin - Guarda token automáticamente"
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Receptionist",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('receptionist_token', jsonData.token);",
+									"    console.log('✅ Receptionist Token guardado');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"receptionist@example.com\",\n  \"password\": \"recep123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Coach",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('coach_token', jsonData.token);",
+									"    console.log('✅ Coach Token guardado');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"coach@example.com\",\n  \"password\": \"coach123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login - Client",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200 || pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('client_token', jsonData.token);",
+									"    console.log('✅ Client Token guardado');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"client@example.com\",\n  \"password\": \"client123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "MEMBERSHIPS",
+			"item": [
+				{
+					"name": "Ver todas las Membresías",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/memberships",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"memberships"
+							]
+						},
+						"description": "Obtiene todas las membresías. Requiere rol: admin o receptionist"
+					},
+					"response": []
+				},
+				{
+					"name": "Ver Membresía por ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/memberships/{{membership_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"memberships",
+								"{{membership_id}}"
+							]
+						},
+						"description": "Obtiene una membresía específica por ID. Requiere rol: admin, receptionist o coach"
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Nueva Membresía",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('membership_id', jsonData.id);",
+									"    console.log('✅ Membership ID guardado: ' + jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Estudiantes Mensual\",\n  \"cost\": 35.50,\n  \"max_classes_assistance\": 12,\n  \"max_gym_assistance\": 20,\n  \"duration_months\": 1,\n  \"status\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/memberships",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"memberships"
+							]
+						},
+						"description": "Crea una nueva membresía. Solo admin puede crear"
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Membresía",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Básica Mensual Actualizada\",\n  \"cost\": 55.00,\n  \"max_classes_assistance\": 10\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/memberships/{{membership_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"memberships",
+								"{{membership_id}}"
+							]
+						},
+						"description": "Actualiza una membresía existente. Solo admin"
+					},
+					"response": []
+				},
+				{
+					"name": "Toggle Status (Activar/Desactivar)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/memberships/{{membership_id}}/toggle-status",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"memberships",
+								"{{membership_id}}",
+								"toggle-status"
+							]
+						},
+						"description": "Cambia el estado activo/inactivo de una membresía. Solo admin"
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar Membresía (Soft Delete)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/memberships/{{membership_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"memberships",
+								"{{membership_id}}"
+							]
+						},
+						"description": "Elimina (soft delete) una membresía. Solo admin. Retorna 204 No Content"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "admin_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "receptionist_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "coach_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "client_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "membership_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "subscription_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
