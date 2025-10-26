@@ -51,7 +51,7 @@ export class SubscriptionsService {
     const activeSubscription = await this.subscriptionRepository.findOne({
       where: {
         user: { id: userId },
-        is_active: true,
+        isActive: true,
       },
     });
 
@@ -85,7 +85,7 @@ export class SubscriptionsService {
       max_gym_assistance: 0,
       duration_months: 0,
       purchase_date: new Date(),
-      is_active: true,
+      isActive: true,
       user,
       memberships: [],
     });
@@ -196,7 +196,7 @@ export class SubscriptionsService {
   async deactivateSubscription(id: string): Promise<Subscription> {
     const subscription = await this.findOne(id);
 
-    subscription.is_active = false;
+    subscription.isActive = false;
 
     return await this.subscriptionRepository.save(subscription);
   }
@@ -216,7 +216,7 @@ export class SubscriptionsService {
       );
     }
 
-    subscription.is_active = true;
+    subscription.isActive = true;
 
     return await this.subscriptionRepository.save(subscription);
   }
