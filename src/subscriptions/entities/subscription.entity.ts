@@ -35,9 +35,6 @@ export class Subscription {
   @Column('date')
   purchase_date: Date;
 
-  @Column('boolean', { default: true })
-  is_active: boolean;
-
   @CreateDateColumn()
   created_at: Date;
 
@@ -50,11 +47,16 @@ export class Subscription {
   @ManyToOne(() => User, (user) => user.subscriptions, { onDelete: 'CASCADE' })
   user: User;
 
-  @ManyToMany(() => Membership, (membership) => membership.subscriptions, { eager: false })
+  @ManyToMany(() => Membership, (membership) => membership.subscriptions, {
+    eager: false,
+  })
   @JoinTable({
     name: 'subscription_memberships',
     joinColumn: { name: 'subscriptionId', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'membershipId', referencedColumnName: 'id' },
   })
   memberships: Membership[];
+
+  @Column({ type: 'boolean', default: true, name: 'is_active' })
+  isActive: boolean;
 }

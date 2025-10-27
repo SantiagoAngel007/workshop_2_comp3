@@ -51,7 +51,7 @@ export class SubscriptionsService {
     const activeSubscription = await this.subscriptionRepository.findOne({
       where: {
         user: { id: userId },
-        is_active: true,
+        isActive: true,
       },
     });
 
@@ -85,7 +85,7 @@ export class SubscriptionsService {
       max_gym_assistance: 0,
       duration_months: 0,
       purchase_date: new Date(),
-      is_active: true,
+      isActive: true,
       user,
       memberships: [],
     });
@@ -125,10 +125,14 @@ export class SubscriptionsService {
     subscription.memberships.push(membershipTemplate);
 
     // Actualizar los valores de la subscripción con los de la nueva membresía
-    subscription.cost += membershipTemplate.cost;
-    subscription.max_classes_assistance +=
-      membershipTemplate.max_classes_assistance;
-    subscription.max_gym_assistance += membershipTemplate.max_gym_assistance;
+    subscription.cost =
+      Number(subscription.cost) + Number(membershipTemplate.cost);
+    subscription.max_classes_assistance =
+      Number(subscription.max_classes_assistance) +
+      Number(membershipTemplate.max_classes_assistance);
+    subscription.max_gym_assistance =
+      Number(subscription.max_gym_assistance) +
+      Number(membershipTemplate.max_gym_assistance);
     subscription.duration_months = Math.max(
       subscription.duration_months,
       membershipTemplate.duration_months,
@@ -196,7 +200,7 @@ export class SubscriptionsService {
   async deactivateSubscription(id: string): Promise<Subscription> {
     const subscription = await this.findOne(id);
 
-    subscription.is_active = false;
+    subscription.isActive = false;
 
     return await this.subscriptionRepository.save(subscription);
   }
@@ -216,7 +220,7 @@ export class SubscriptionsService {
       );
     }
 
-    subscription.is_active = true;
+    subscription.isActive = true;
 
     return await this.subscriptionRepository.save(subscription);
   }

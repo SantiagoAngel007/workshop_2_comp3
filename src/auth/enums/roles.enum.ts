@@ -1,6 +1,6 @@
-export enum ValidRoles{
-    admin = 'admin',
-    coach = 'coach',
-    client = 'client', 
-    receptionist = 'receptionist'
+export enum ValidRoles {
+  admin = 'admin',
+  coach = 'coach',
+  client = 'client',
+  receptionist = 'receptionist',
 }
