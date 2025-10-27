@@ -8,6 +8,7 @@ import {
   Entity,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   ManyToOne,
 } from 'typeorm';
 
@@ -40,14 +41,22 @@ export class Subscription {
   @UpdateDateColumn()
   updated_at: Date;
 
+  @DeleteDateColumn()
+  deleted_at: Date;
+
   @ManyToOne(() => User, (user) => user.subscriptions, { onDelete: 'CASCADE' })
   user: User;
 
-  @ManyToMany(() => Membership, { eager: false })
+  @ManyToMany(() => Membership, (membership) => membership.subscriptions, {
+    eager: false,
+  })
   @JoinTable({
     name: 'subscription_memberships',
     joinColumn: { name: 'subscriptionId', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'membershipId', referencedColumnName: 'id' },
   })
   memberships: Membership[];
+
+  @Column({ type: 'boolean', default: true, name: 'is_active' })
+  isActive: boolean;
 }

@@ -44,23 +44,33 @@ export class AuthService {
       password: this.encryptPassword(password),
     });
 
-    const defaultRole = await this.roleRepository.findOneBy({ name: ValidRoles.client });
+    const defaultRole = await this.roleRepository.findOneBy({
+      name: ValidRoles.client,
+    });
     if (!defaultRole) {
-      throw new InternalServerErrorException('Rol por defecto "client" no encontrado');
+      throw new InternalServerErrorException(
+        'Rol por defecto "client" no encontrado',
+      );
     }
     user.roles = [defaultRole];
 
     try {
       await this.userRepository.save(user);
-      
+
       // Crear subscripción vacía automáticamente
       try {
         await this.subscriptionsService.createSubscriptionForUser(user.id);
       } catch (subscriptionError) {
-        this.logger.warn(`Failed to create subscription for user ${user.id}`, subscriptionError);
-        // No falla el registro si falla la creación de la subscripción
+        // Logueamos el error para verlo en la consola con todos sus detalles
+        this.logger.error(
+          `FATAL: Failed to create subscription for user ${user.id}. Registration aborted.`,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          subscriptionError.stack, // El .stack da mucha más información
+        );
+        // Volvemos a lanzar el error para que la petición falle y veamos el problema
+        throw subscriptionError;
       }
-      
+
       delete user.password;
       return {
         ...user,
@@ -76,7 +86,14 @@ export class AuthService {
 
     const user = await this.userRepository.findOne({
       where: { email },
-      select: { id: true, email: true, password: true, fullName: true, age: true, isActive: true },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        fullName: true,
+        age: true,
+        isActive: true,
+      },
       relations: ['roles'],
     });
 
@@ -100,7 +117,7 @@ export class AuthService {
       const users = await this.userRepository.find({
         relations: ['roles'],
       });
-      return users.map(user => {
+      return users.map((user) => {
         const { password, ...safeUser } = user;
         return safeUser;
       });
@@ -125,59 +142,61 @@ export class AuthService {
   }
 
   async update(
-  idToUpdate: string,
-  updateUserDto: UpdateUserDto,
-  authUser: User,
-) {
-  const userToUpdate = await this.userRepository.findOne({
-    where: { id: idToUpdate },
-    relations: ['roles'],
-  });
-
-  if (!userToUpdate) {
-    throw new NotFoundException(`User with ID ${idToUpdate} not found`);
-  }
-
-  const isAdmin = authUser.roles.some(role => role.name === ValidRoles.admin);
-
-  if (!isAdmin && authUser.id !== idToUpdate) {
-    throw new ForbiddenException(
-      `You can only update your own profile. You cannot update other users.`
-    );
-  }
-
-  if (updateUserDto.email && updateUserDto.email !== userToUpdate.email) {
-    const existingUser = await this.userRepository.findOneBy({
-      email: updateUserDto.email,
-    });
-    if (existingUser) {
-      throw new BadRequestException('Email already in use');
-    }
-  }
-
-  if (updateUserDto.password) {
-    updateUserDto.password = this.encryptPassword(updateUserDto.password);
-  }
-
-  try {
-    await this.userRepository.update(idToUpdate, updateUserDto);
-    const updatedUser = await this.userRepository.findOne({
+    idToUpdate: string,
+    updateUserDto: UpdateUserDto,
+    authUser: User,
+  ) {
+    const userToUpdate = await this.userRepository.findOne({
       where: { id: idToUpdate },
       relations: ['roles'],
     });
 
-    if (!updatedUser) {
-      throw new InternalServerErrorException(
-        'User updated but not found after update'
+    if (!userToUpdate) {
+      throw new NotFoundException(`User with ID ${idToUpdate} not found`);
+    }
+
+    const isAdmin = authUser.roles.some(
+      (role) => role.name === ValidRoles.admin,
+    );
+
+    if (!isAdmin && authUser.id !== idToUpdate) {
+      throw new ForbiddenException(
+        `You can only update your own profile. You cannot update other users.`,
       );
     }
 
-    delete updatedUser.password;
-    return updatedUser;
-  } catch (error) {
-    this.handleException(error);
+    if (updateUserDto.email && updateUserDto.email !== userToUpdate.email) {
+      const existingUser = await this.userRepository.findOneBy({
+        email: updateUserDto.email,
+      });
+      if (existingUser) {
+        throw new BadRequestException('Email already in use');
+      }
+    }
+
+    if (updateUserDto.password) {
+      updateUserDto.password = this.encryptPassword(updateUserDto.password);
+    }
+
+    try {
+      await this.userRepository.update(idToUpdate, updateUserDto);
+      const updatedUser = await this.userRepository.findOne({
+        where: { id: idToUpdate },
+        relations: ['roles'],
+      });
+
+      if (!updatedUser) {
+        throw new InternalServerErrorException(
+          'User updated but not found after update',
+        );
+      }
+
+      delete updatedUser.password;
+      return updatedUser;
+    } catch (error) {
+      this.handleException(error);
+    }
   }
-}
 
   async remove(id: string) {
     const user = await this.userRepository.findOne({
@@ -189,7 +208,7 @@ export class AuthService {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    const isAdmin = user.roles.some(role => role.name === 'admin');
+    const isAdmin = user.roles.some((role) => role.name === 'admin');
     if (isAdmin) {
       const adminCount = await this.userRepository
         .createQueryBuilder('user')
@@ -224,6 +243,8 @@ export class AuthService {
     if (error.code === '23505') {
       throw new BadRequestException(error.detail);
     }
-    throw new InternalServerErrorException('Unexpected error, check server logs');
+    throw new InternalServerErrorException(
+      'Unexpected error, check server logs',
+    );
   }
 }

@@ -92,6 +92,26 @@ export class SubscriptionsController {
   }
 
   /**
+   * PATCH /subscriptions/:id/deactivate
+   * Desactiva una subscripción
+   */
+  @Patch(':id/deactivate')
+  @Auth(ValidRoles.admin)
+  deactivate(@Param('id') id: string) {
+    return this.subscriptionsService.deactivateSubscription(id);
+  }
+
+  /**
+   * PATCH /subscriptions/:id/activate
+   * Activa una subscripción
+   */
+  @Patch(':id/activate')
+  @Auth(ValidRoles.admin)
+  activate(@Param('id') id: string) {
+    return this.subscriptionsService.activateSubscription(id);
+  }
+
+  /**
    * DELETE /subscriptions/:id
    * Elimina una subscripción
    */

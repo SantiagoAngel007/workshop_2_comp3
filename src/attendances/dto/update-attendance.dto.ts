@@ -1,4 +1,11 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateAttendanceDto } from './create-attendance.dto';
+import { IsBoolean, IsDateString, IsOptional } from 'class-validator';
 
-export class UpdateAttendanceDto extends PartialType(CreateAttendanceDto) {}
+export class UpdateAttendanceDto {
+  @IsOptional()
+  @IsDateString()
+  readonly exitDatetime?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  readonly isActive?: boolean;
+}
