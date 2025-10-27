@@ -125,10 +125,14 @@ export class SubscriptionsService {
     subscription.memberships.push(membershipTemplate);
 
     // Actualizar los valores de la subscripción con los de la nueva membresía
-    subscription.cost += membershipTemplate.cost;
-    subscription.max_classes_assistance +=
-      membershipTemplate.max_classes_assistance;
-    subscription.max_gym_assistance += membershipTemplate.max_gym_assistance;
+    subscription.cost =
+      Number(subscription.cost) + Number(membershipTemplate.cost);
+    subscription.max_classes_assistance =
+      Number(subscription.max_classes_assistance) +
+      Number(membershipTemplate.max_classes_assistance);
+    subscription.max_gym_assistance =
+      Number(subscription.max_gym_assistance) +
+      Number(membershipTemplate.max_gym_assistance);
     subscription.duration_months = Math.max(
       subscription.duration_months,
       membershipTemplate.duration_months,

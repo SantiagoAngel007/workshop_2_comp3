@@ -35,9 +35,6 @@ export class Subscription {
   @Column('date')
   purchase_date: Date;
 
-  @Column('boolean', { default: true })
-  is_active: boolean;
-
   @CreateDateColumn()
   created_at: Date;
 

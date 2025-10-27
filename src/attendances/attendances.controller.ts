@@ -6,9 +6,8 @@ import {
   Param,
   Query,
   ParseUUIDPipe,
-  ForbiddenException,
 } from '@nestjs/common';
-import { AttendanceService } from './attendances.service';
+import { AttendancesService } from './attendances.service';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
 import { GetHistoryDto } from './dto/get-history.dto';
 
@@ -16,10 +15,11 @@ import { Auth } from '../auth/decorators/auth.decorator';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { ValidRoles } from '../auth/enums/roles.enum';
 import { User } from '../auth/entities/users.entity';
+import { CheckOutDto } from './dto/check-out.dto';
 
 @Controller('attendances')
-export class AttendanceController {
-  constructor(private readonly attendanceService: AttendanceService) {}
+export class AttendancesController {
+  constructor(private readonly attendanceService: AttendancesService) {}
 
   /**
    * Endpoint para registrar el check-in de un usuario.
@@ -31,9 +31,18 @@ export class AttendanceController {
     @GetUser() receptionist: User,
   ) {
     console.log(
-      `Check-in realizado por recepcionista: ${receptionist.email} para el usuario: ${createAttendanceDto.userId}`
+      `Check-in realizado por recepcionista: ${receptionist.email} para el usuario: ${createAttendanceDto.userId}`,
     );
     return this.attendanceService.checkIn(createAttendanceDto);
+  }
+
+  /**
+   * Endpoint para que un recepcionista registre el check-out de un usuario.
+   */
+  @Post('check-out')
+  @Auth(ValidRoles.receptionist)
+  checkOutByReceptionist(@Body() checkOutDto: CheckOutDto) {
+    return this.attendanceService.checkOut(checkOutDto.userId);
   }
 
   /**

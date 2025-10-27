@@ -18,7 +18,7 @@ import {
 import { GetHistoryDto } from './dto/get-history.dto';
 
 @Injectable()
-export class AttendanceService {
+export class AttendancesService {
   constructor(
     @InjectRepository(Attendance)
     private readonly attendanceRepository: Repository<Attendance>,
