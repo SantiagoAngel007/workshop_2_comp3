@@ -1,0 +1,113 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { MembershipsController } from './memberships.controller';
+import { MembershipsService } from './memberships.service';
+import { mockMembership } from '../../test/utils/test-utils';
+
+describe('MembershipsController', () => {
+  let controller: MembershipsController;
+  let membershipsService: MembershipsService;
+
+  const mockMembershipsService = {
+    create: jest.fn(),
+    findAll: jest.fn(),
+    findMembershipById: jest.fn(),
+    update: jest.fn(),
+    remove: jest.fn(),
+  };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [MembershipsController],
+      providers: [
+        {
+          provide: MembershipsService,
+          useValue: mockMembershipsService,
+        },
+      ],
+    }).compile();
+
+    controller = module.get<MembershipsController>(MembershipsController);
+    membershipsService = module.get<MembershipsService>(MembershipsService);
+  });
+
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
+  });
+
+  describe('create', () => {
+    it('should create a membership', async () => {
+      const createMembershipDto = {
+        name: 'Basic Membership',
+        cost: 50,
+        status: true,
+        max_classes_assistance: 10,
+        max_gym_assistance: 30,
+        duration_months: 1,
+      };
+      const expectedResult = mockMembership;
+
+      mockMembershipsService.create.mockResolvedValue(expectedResult);
+
+      const result = await controller.create(createMembershipDto);
+
+      expect(result).toEqual(expectedResult);
+      expect(membershipsService.create).toHaveBeenCalledWith(createMembershipDto);
+    });
+  });
+
+  describe('findAll', () => {
+    it('should return all memberships', async () => {
+      const expectedResult = [mockMembership];
+
+      mockMembershipsService.findAll.mockResolvedValue(expectedResult);
+
+      const result = await controller.findAll();
+
+      expect(result).toEqual(expectedResult);
+      expect(membershipsService.findAll).toHaveBeenCalled();
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return membership by id', async () => {
+      const id = 'membership-123';
+      const expectedResult = mockMembership;
+
+      mockMembershipsService.findMembershipById.mockResolvedValue(expectedResult);
+
+      const result = await controller.findOne(id);
+
+      expect(result).toEqual(expectedResult);
+      expect(membershipsService.findMembershipById).toHaveBeenCalledWith(id);
+    });
+  });
+
+  describe('update', () => {
+    it('should update membership', async () => {
+      const id = 'membership-123';
+      const updateMembershipDto = { name: 'Updated Membership' };
+      const expectedResult = { ...mockMembership, name: 'Updated Membership' };
+
+      mockMembershipsService.update.mockResolvedValue(expectedResult);
+
+      const result = await controller.update(id, updateMembershipDto);
+
+      expect(result).toEqual(expectedResult);
+      expect(membershipsService.update).toHaveBeenCalledWith(id, updateMembershipDto);
+    });
+  });
+
+  describe('remove', () => {
+    it('should remove membership', async () => {
+      const id = 'membership-123';
+      const expectedResult = mockMembership;
+
+      mockMembershipsService.remove.mockResolvedValue(expectedResult);
+
+      const result = await controller.remove(id);
+
+      expect(result).toEqual(expectedResult);
+      expect(membershipsService.remove).toHaveBeenCalledWith(id);
+    });
+  });
+});
