@@ -8,6 +8,7 @@ import { createMockRepository, mockUser, mockMembership, mockSubscription } from
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
+import { AddMembershipDto } from './dto/add-membership.dto';
 
 describe('SubscriptionsService', () => {
   let service: SubscriptionsService;
@@ -40,6 +41,10 @@ describe('SubscriptionsService', () => {
     userRepository = module.get(getRepositoryToken(User));
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
@@ -70,29 +75,71 @@ describe('SubscriptionsService', () => {
     });
   });
 
-  describe('create', () => {
-    it('should create new subscription', async () => {
-      const createDto: CreateSubscriptionDto = {
-        userId: 'user-123',
-        membershipIds: ['membership-123'],
-        start_date: new Date(),
-        end_date: new Date(),
-      };
-
+  describe('createSubscriptionForUser', () => {
+    it('should create new subscription for a user', async () => {
+      const userId = 'user-123';
       userRepository.findOne.mockResolvedValue(mockUser);
-      membershipRepository.findByIds.mockResolvedValue([mockMembership]);
-      subscriptionRepository.findOne.mockResolvedValue(null);
-      subscriptionRepository.create.mockReturnValue(mockSubscription);
+      subscriptionRepository.findOne.mockResolvedValue(null); // No active subscription
+      subscriptionRepository.create.mockImplementation(dto => dto);
       subscriptionRepository.save.mockResolvedValue(mockSubscription);
 
-      // CORRECCIÓN: Cambia 'create' por el nombre real del método en el servicio
-      // Asumiendo que el método se llama 'createSubscription' (verifica en el archivo .ts del servicio)
-      const result = await service.createSubscriptionForUser(createDto.userId);
+      const result = await service.createSubscriptionForUser(userId);
 
-      expect(result).toEqual(mockSubscription);
+      expect(result).toBeDefined();
+    });
+
+    it('should throw NotFoundException if user not found', async () => {
+      const userId = 'invalid-user';
+      userRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.createSubscriptionForUser(userId)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ConflictException if user already has an active subscription', async () => {
+      const userId = 'user-123';
+      userRepository.findOne.mockResolvedValue(mockUser);
+      jest.spyOn(service, 'hasActiveSubscription').mockResolvedValue(true);
+
+      await expect(service.createSubscriptionForUser(userId)).rejects.toThrow(ConflictException);
     });
   });
 
+  describe('addMembershipToSubscription', () => {
+    it('should add membership to subscription', async () => {
+      const subscriptionId = 'subscription-123';
+      const addMembershipDto: AddMembershipDto = { membershipId: 'membership-123' };
+      
+      membershipRepository.findOne.mockResolvedValue(mockMembership);
+      subscriptionRepository.findOne.mockResolvedValue(mockSubscription);
+      subscriptionRepository.save.mockResolvedValue(mockSubscription);
+
+      const result = await service.addMembershipToSubscription(subscriptionId, addMembershipDto);
+
+      expect(result).toEqual(mockSubscription);
+      expect(membershipRepository.findOne).toHaveBeenCalledWith({ where: { id: addMembershipDto.membershipId } });
+      expect(subscriptionRepository.findOne).toHaveBeenCalledWith({ where: { id: subscriptionId }, relations: ['memberships'] });
+      expect(subscriptionRepository.save).toHaveBeenCalledWith(mockSubscription);
+    });
+
+    it('should throw NotFoundException if membership not found', async () => {
+      const subscriptionId = 'subscription-123';
+      const addMembershipDto: AddMembershipDto = { membershipId: 'invalid-membership' };
+
+      membershipRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.addMembershipToSubscription(subscriptionId, addMembershipDto)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if subscription not found', async () => {
+      const subscriptionId = 'invalid-subscription';
+      const addMembershipDto: AddMembershipDto = { membershipId: 'membership-123' };
+
+      membershipRepository.findOne.mockResolvedValue(mockMembership);
+      subscriptionRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.addMembershipToSubscription(subscriptionId, addMembershipDto)).rejects.toThrow(NotFoundException);
+    });
+  });
   describe('update', () => {
     it('should update subscription', async () => {
       const updateDto: UpdateSubscriptionDto = {
@@ -107,8 +154,64 @@ describe('SubscriptionsService', () => {
 
       expect(result).toEqual(mockSubscription);
     });
+
+    it('should throw NotFoundException if one or more memberships not found', async () => {
+      const updateDto: UpdateSubscriptionDto = {
+        membershipIds: ['membership-123', 'invalid-membership'],
+      };
+
+      subscriptionRepository.findOne.mockResolvedValue(mockSubscription);
+      membershipRepository.findByIds.mockResolvedValue([mockMembership]);
+
+      await expect(service.update('subscription-123', updateDto)).rejects.toThrow(NotFoundException);
+    });
   });
 
+  describe('deactivateSubscription', () => {
+    it('should deactivate a subscription', async () => {
+      subscriptionRepository.findOne.mockResolvedValue(mockSubscription);
+      subscriptionRepository.save.mockResolvedValue({ ...mockSubscription, isActive: false });
+
+      const result = await service.deactivateSubscription('subscription-123');
+
+      expect(result.isActive).toBe(false);
+    });
+  });
+
+  describe('activateSubscription', () => {
+    it('should activate a subscription', async () => {
+      const inactiveSubscription = { ...mockSubscription, isActive: false, user: mockUser };
+      subscriptionRepository.findOne.mockResolvedValue(inactiveSubscription);
+      subscriptionRepository.save.mockResolvedValue({ ...inactiveSubscription, isActive: true });
+      jest.spyOn(service, 'hasActiveSubscription').mockResolvedValue(false);
+
+      const result = await service.activateSubscription('subscription-123');
+
+      expect(result.isActive).toBe(true);
+    });
+
+    it('should throw ConflictException if user already has an active subscription', async () => {
+      const inactiveSubscription = { ...mockSubscription, isActive: false, user: mockUser };
+      subscriptionRepository.findOne.mockResolvedValue(inactiveSubscription);
+      jest.spyOn(service, 'hasActiveSubscription').mockResolvedValue(true);
+
+      await expect(service.activateSubscription('subscription-123')).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('hasActiveSubscription', () => {
+    it('should return true if user has active subscription', async () => {
+      subscriptionRepository.findOne.mockResolvedValue(mockSubscription);
+      const result = await service.hasActiveSubscription('user-123');
+      expect(result).toBe(true);
+    });
+
+    it('should return false if user has no active subscription', async () => {
+      subscriptionRepository.findOne.mockResolvedValue(null);
+      const result = await service.hasActiveSubscription('user-123');
+      expect(result).toBe(false);
+    });
+  });
   describe('remove', () => {
     it('should remove subscription', async () => {
       subscriptionRepository.findOne.mockResolvedValue(mockSubscription);

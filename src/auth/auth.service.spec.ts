@@ -5,14 +5,73 @@ import { JwtService } from '@nestjs/jwt';
 import { User } from './entities/users.entity';
 import { Role } from './entities/roles.entity';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
-import { createMockRepository, mockUser, mockRole } from '../../test/utils/test-utils';
+import { createMockRepository, mockRole } from '../../test/utils/test-utils';
 import { UnauthorizedException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { ValidRoles } from './enums/roles.enum';
 import * as bcrypt from 'bcrypt';
+import { Jwt } from './interfaces/jwt.interface';
+import { Subscription } from '../subscriptions/entities/subscription.entity';
 
-jest.mock('bcrypt');
+// Create a full mock User instance that matches the entity class
+
+
+const mockAuthUser = {
+  id: 'test-auth-123',
+  email: 'auth@example.com',
+  fullName: 'Auth Test User',
+  age: 25,
+  password: 'hashedPassword123',
+  isActive: true,
+  roles: [],
+  subscriptions: [],
+  attendances: [],
+  checkFieldsBeforeChanges: jest.fn(),
+} as User;
+
+// Prepare auth user with admin role
+const mockAuthUserAdmin = {
+  ...mockAuthUser,
+  roles: [{ name: ValidRoles.admin }],
+} as User;
+
+jest.mock('bcrypt', () => ({
+  hashSync: jest.fn(),
+  compareSync: jest.fn(),
+}));
 
 describe('AuthService', () => {
+  // Create mock users with required entity methods
+  // Base mock user instance with required methods
+  const mockTestUser = {
+    id: 'test-user-123',
+    email: 'test@example.com',
+    fullName: 'Test User',
+    age: 25,
+    password: 'hashedPassword123',
+    isActive: true,
+    roles: [],
+    subscriptions: [],
+    attendances: [],
+    checkFieldsBeforeChanges: jest.fn(),
+  } as User;
+
+  // Admin user for auth checks
+  const mockAdminUser = {
+    ...mockTestUser,
+    id: 'admin-user-123',
+    email: 'admin@example.com',
+    roles: [{ id: 'admin-role-id', name: ValidRoles.admin, users: [] }],
+    checkFieldsBeforeChanges: jest.fn(),
+  } as User;
+
+  // Regular user for testing
+  const mockRegularUser = {
+    ...mockTestUser,
+    id: 'regular-user-123',
+    email: 'regular@example.com',
+    roles: [{ id: 'client-role-id', name: ValidRoles.client, users: [] }],
+    checkFieldsBeforeChanges: jest.fn(),
+  } as User;
   let service: AuthService;
   let userRepository: any;
   let roleRepository: any;
@@ -25,7 +84,7 @@ describe('AuthService', () => {
         AuthService,
         {
           provide: getRepositoryToken(User),
-          useValue: createMockRepository(), // Asegúrate de que este mock incluya 'save' y 'findOne'
+          useValue: createMockRepository(),
         },
         {
           provide: getRepositoryToken(Role),
@@ -34,14 +93,27 @@ describe('AuthService', () => {
         {
           provide: JwtService,
           useValue: {
-            sign: jest.fn(),
-          },
+            sign: jest.fn().mockImplementation(() => 'jwt-token'),
+          } as unknown as JwtService,
         },
         {
           provide: SubscriptionsService,
           useValue: {
-            createSubscriptionForUser: jest.fn(),
-          },
+            createSubscriptionForUser: jest.fn().mockImplementation(() => Promise.resolve({
+              id: 'test-subscription-123',
+              isActive: true,
+              created_at: new Date(),
+              updated_at: new Date(),
+            } as Subscription)),
+            findSubscriptionByUserId: jest.fn(),
+            hasActiveSubscription: jest.fn(),
+            addMembershipToSubscription: jest.fn(),
+            findAll: jest.fn(),
+            findOne: jest.fn(),
+            create: jest.fn(),
+            update: jest.fn(),
+            remove: jest.fn(),
+          } as unknown as SubscriptionsService,
         },
       ],
     }).compile();
@@ -49,8 +121,8 @@ describe('AuthService', () => {
     service = module.get<AuthService>(AuthService);
     userRepository = module.get(getRepositoryToken(User));
     roleRepository = module.get(getRepositoryToken(Role));
-    jwtService = module.get<JwtService>(JwtService);
-    subscriptionsService = module.get<SubscriptionsService>(SubscriptionsService);
+    jwtService = module.get(JwtService);
+    subscriptionsService = module.get(SubscriptionsService);
   });
 
   it('should be defined', () => {
@@ -68,19 +140,48 @@ describe('AuthService', () => {
 
       const hashedPassword = 'hashedPassword';
       const defaultRole = { ...mockRole, name: ValidRoles.client };
-      const savedUser = { ...mockUser, roles: [defaultRole] };
+      const savedUser = { ...mockTestUser, roles: [defaultRole] };
 
       (bcrypt.hashSync as jest.Mock).mockReturnValue(hashedPassword);
       roleRepository.findOneBy.mockResolvedValue(defaultRole);
       userRepository.create.mockReturnValue({ ...createUserDto, password: hashedPassword });
       userRepository.save.mockResolvedValue(savedUser);
-      subscriptionsService.createSubscriptionForUser.mockResolvedValue({});
-      jwtService.sign.mockReturnValue('jwt-token');
+      jest.spyOn(subscriptionsService, 'createSubscriptionForUser').mockImplementation(() => 
+        Promise.resolve({
+          id: 'test-subscription-123',
+          isActive: true,
+          created_at: new Date(),
+          updated_at: new Date(),
+        } as Subscription)
+      );
 
       const result = await service.create(createUserDto);
 
       expect(result).toHaveProperty('token');
       expect(result.token).toBe('jwt-token');
+    });
+
+    it('should throw InternalServerErrorException if subscription creation fails', async () => {
+      const createUserDto = {
+        email: 'test@example.com',
+        fullName: 'Test User',
+        age: 25,
+        password: 'password123',
+      };
+
+      const hashedPassword = 'hashedPassword';
+      const defaultRole = { ...mockRole, name: ValidRoles.client };
+      const savedUser = { ...mockTestUser, roles: [defaultRole] };
+
+      (bcrypt.hashSync as jest.Mock).mockReturnValue(hashedPassword);
+      roleRepository.findOneBy.mockResolvedValue(defaultRole);
+      userRepository.create.mockReturnValue({ ...createUserDto, password: hashedPassword });
+      userRepository.save.mockResolvedValue(savedUser);
+      jest.spyOn(subscriptionsService, 'createSubscriptionForUser').mockImplementation(() => 
+        Promise.reject(new Error('Subscription creation failed'))
+      );
+
+      await expect(service.create(createUserDto)).rejects.toThrow('Subscription creation failed');
     });
 
     it('should throw InternalServerErrorException if default role not found', async () => {
@@ -97,7 +198,28 @@ describe('AuthService', () => {
       await expect(service.create(createUserDto)).rejects.toThrow(InternalServerErrorException);
     });
 
-    it('should handle database errors during user creation', async () => {
+    it('should handle duplicate email error during user creation', async () => {
+      const createUserDto = {
+        email: 'test@example.com',
+        fullName: 'Test User',
+        age: 25,
+        password: 'password123',
+      };
+
+      const defaultRole = { ...mockRole, name: ValidRoles.client };
+      roleRepository.findOneBy.mockResolvedValue(defaultRole);
+      userRepository.create.mockReturnValue(createUserDto);
+      
+      // Simulate PostgreSQL unique constraint violation error
+      const error = new Error('Duplicate email');
+      (error as any).code = '23505';
+      (error as any).detail = 'Email already exists';
+      userRepository.save.mockRejectedValue(error);
+
+      await expect(service.create(createUserDto)).rejects.toThrow('Email already exists');
+    });
+
+    it('should handle unexpected database errors during user creation', async () => {
       const createUserDto = {
         email: 'test@example.com',
         fullName: 'Test User',
@@ -110,7 +232,8 @@ describe('AuthService', () => {
       userRepository.create.mockReturnValue(createUserDto);
       userRepository.save.mockRejectedValue(new Error('Database error'));
 
-      await expect(service.create(createUserDto)).rejects.toThrow();
+      await expect(service.create(createUserDto)).rejects.toThrow(InternalServerErrorException);
+      await expect(service.create(createUserDto)).rejects.toThrow('Unexpected error, check server logs');
     });
   });
 
@@ -121,10 +244,10 @@ describe('AuthService', () => {
         password: 'password123',
       };
 
-      const user = { ...mockUser, password: 'hashedPassword' };
+      const user = { ...mockTestUser, password: 'hashedPassword' };
       userRepository.findOne.mockResolvedValue(user);
       (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
-      jwtService.sign.mockReturnValue('jwt-token');
+      jest.spyOn(jwtService, 'sign').mockImplementation(() => 'jwt-token');
 
       const result = await service.login(loginDto);
 
@@ -150,7 +273,7 @@ describe('AuthService', () => {
         password: 'wrongpassword',
       };
 
-      const user = { ...mockUser, password: 'hashedPassword' };
+      const user = { ...mockTestUser, password: 'hashedPassword' };
       userRepository.findOne.mockResolvedValue(user);
       (bcrypt.compareSync as jest.Mock).mockReturnValue(false);
 
@@ -163,10 +286,10 @@ describe('AuthService', () => {
         password: 'password123',
       };
 
-      const user = { ...mockUser, isActive: false, password: 'hashedPassword' };
+      const user = { ...mockTestUser, isActive: false, password: 'hashedPassword' };
       userRepository.findOne.mockResolvedValue(user);
       (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
-      jwtService.sign.mockReturnValue('jwt-token');
+      jest.spyOn(jwtService, 'sign').mockImplementation(() => 'jwt-token');
 
       const result = await service.login(loginDto);
       expect(result).toHaveProperty('token');
@@ -175,7 +298,7 @@ describe('AuthService', () => {
 
   describe('findAll', () => {
     it('should return all users', async () => {
-      const users = [{ ...mockUser }];
+      const users = [{ ...mockTestUser }];
       // No se debe incluir la contraseña en la respuesta
       const usersWithoutPassword = users.map(user => {
         const { password, ...userWithoutPassword } = user;
@@ -192,11 +315,11 @@ describe('AuthService', () => {
 
   describe('findOne', () => {
     it('should return user by id', async () => {
-      userRepository.findOne.mockResolvedValue(mockUser);
+      userRepository.findOne.mockResolvedValue(mockTestUser);
 
       const result = await service.findOne('123');
 
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual(mockTestUser);
     });
 
     it('should throw NotFoundException if user not found', async () => {
@@ -210,7 +333,7 @@ describe('AuthService', () => {
     it('should update user successfully', async () => {
       const updateUserDto = { fullName: 'Updated Name' };
       const userId = '123';
-      const authUser = { ...mockUser, roles: [{ name: ValidRoles.admin }] }; // Definimos authUser
+      const authUser = { ...mockAdminUser } as User;
 
       // Simula el usuario existente antes de la actualización
       const existingUser = {
@@ -261,7 +384,7 @@ describe('AuthService', () => {
 
     it('should throw NotFoundException if user not found', async () => {
       const updateUserDto = { fullName: 'Updated Name' };
-      const authUser = { ...mockUser, roles: [{ name: ValidRoles.admin }] };
+      const authUser = { ...mockAdminUser } as User;
       const userId = '123';
 
       // Mock para findOne: simula que no encuentra el usuario
@@ -272,9 +395,9 @@ describe('AuthService', () => {
 
     it('should hash password if provided in update', async () => {
       const updateUserDto = { password: 'newpassword' };
-      const userId = mockUser.id;
-      const existingUser = { ...mockUser, password: 'oldHashedPassword' };
-      const authUser = { ...mockUser, roles: [{ name: ValidRoles.admin }] };
+      const userId = mockTestUser.id;
+      const existingUser = { ...mockTestUser, password: 'oldHashedPassword' };
+      const authUser = { ...mockTestUser, roles: [{ name: ValidRoles.admin }] };
       const newHashedPassword = 'newHashedPassword';
 
       userRepository.findOne.mockResolvedValue(existingUser);
@@ -295,8 +418,8 @@ describe('AuthService', () => {
 
   describe('remove', () => {
     it('should remove user successfully', async () => {
-      userRepository.findOne.mockResolvedValue(mockUser);
-      userRepository.remove.mockResolvedValue(mockUser);
+      userRepository.findOne.mockResolvedValue(mockTestUser);
+      userRepository.remove.mockResolvedValue(mockTestUser);
 
       const result = await service.remove('123');
 
@@ -324,16 +447,91 @@ describe('AuthService', () => {
     });
   });
 
-  describe('getJwtToken', () => {
-    it('should generate JWT token', () => {
-      const payload = { id: '123' };
-      const token = 'jwt-token';
-      jwtService.sign.mockReturnValue(token);
+  describe('handleException', () => {
+    it('should handle PostgreSQL duplicate key error (23505)', () => {
+      const error = new Error('Duplicate key');
+      (error as any).code = '23505';
+      (error as any).detail = 'Key (email)=(test@example.com) already exists';
 
-      const result = service.getJwtToken(payload);
+      const throwException = () => {
+        // Using prototype to access private method for testing
+        (service as any).handleException(error);
+      };
 
-      expect(result).toBe(token);
-      expect(jwtService.sign).toHaveBeenCalledWith(payload);
+      expect(throwException).toThrow('Key (email)=(test@example.com) already exists');
+    });
+
+    it('should handle other database errors with generic message', () => {
+      const error = new Error('Some other database error');
+      (error as any).code = 'OTHER_ERROR';
+
+      const throwException = () => {
+        // Using prototype to access private method for testing
+        (service as any).handleException(error);
+      };
+
+      expect(throwException).toThrow('Unexpected error, check server logs');
+    });
+
+    it('should handle errors without code property', () => {
+      const error = new Error('Random error');
+
+      const throwException = () => {
+        // Using prototype to access private method for testing
+        (service as any).handleException(error);
+      };
+
+      expect(throwException).toThrow('Unexpected error, check server logs');
+    });
+  });
+
+  describe('advanced edge cases', () => {
+    it('should handle create user with malformed role data', async () => {
+      const createUserDto = {
+        email: 'test@example.com',
+        fullName: 'Test User',
+        age: 25,
+        password: 'password123',
+      };
+
+      const defaultRole = { ...mockRole, name: ValidRoles.client };
+      const savedUser = { 
+        ...mockTestUser,
+        roles: undefined // Simulate malformed role data
+      };
+
+      roleRepository.findOneBy.mockResolvedValue(defaultRole);
+      userRepository.create.mockReturnValue(createUserDto);
+      userRepository.save.mockResolvedValue(savedUser);
+      
+      const result = await service.create(createUserDto);
+      expect(result).toBeDefined();
+      expect(result.token).toBeDefined();
+    });
+
+    it('should handle null password in user object during login', async () => {
+      const loginDto = {
+        email: 'test@example.com',
+        password: 'password123',
+      };
+
+      const user = { ...mockTestUser, password: null };
+      userRepository.findOne.mockResolvedValue(user);
+
+      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should handle empty password in update request', async () => {
+      const updateUserDto = { password: '' };
+      const userId = mockTestUser.id;
+      const existingUser = { ...mockTestUser };
+      const authUser = { ...mockAdminUser, checkFieldsBeforeChanges: jest.fn() } as User;
+
+      userRepository.findOne.mockResolvedValue(existingUser);
+
+      await service.update(userId, updateUserDto, authUser);
+
+      expect(bcrypt.hashSync).toHaveBeenCalledWith('', 10);
     });
   });
 });

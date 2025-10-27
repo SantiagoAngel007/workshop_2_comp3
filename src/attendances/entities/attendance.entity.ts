@@ -27,10 +27,16 @@ export class Attendance {
   type: AttendanceType;
 
   @Column('timestamp')
-  checkIn: Date;
+  entranceDatetime: Date;
 
   @Column('timestamp', { nullable: true })
-  checkOut?: Date;
+  exitDatetime?: Date;
+
+  @Column('boolean', { default: true })
+  isActive: boolean;
+
+  @Column('varchar', { length: 10 })
+  dateKey: string;
 
   @CreateDateColumn()
   created_at: Date;
