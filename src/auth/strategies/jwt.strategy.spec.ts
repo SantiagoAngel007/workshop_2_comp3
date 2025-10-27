@@ -4,6 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../entities/users.entity';
 import { createMockRepository } from '../../../test/utils/test-utils';
 import { UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
@@ -16,6 +17,12 @@ describe('JwtStrategy', () => {
         {
           provide: getRepositoryToken(User),
           useValue: createMockRepository(),
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn().mockReturnValue('test-secret'), // Mock JWT_SECRET
+          },
         },
       ],
     }).compile();

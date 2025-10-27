@@ -25,7 +25,7 @@ describe('AuthService', () => {
         AuthService,
         {
           provide: getRepositoryToken(User),
-          useValue: createMockRepository(),
+          useValue: createMockRepository(), // Asegúrate de que este mock incluya 'save' y 'findOne'
         },
         {
           provide: getRepositoryToken(Role),
@@ -176,12 +176,16 @@ describe('AuthService', () => {
   describe('findAll', () => {
     it('should return all users', async () => {
       const users = [{ ...mockUser }];
-      delete users[0].password;
-      userRepository.find.mockResolvedValue(users);
+      // No se debe incluir la contraseña en la respuesta
+      const usersWithoutPassword = users.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      userRepository.find.mockResolvedValue(usersWithoutPassword);
 
       const result = await service.findAll();
 
-      expect(result).toEqual(users);
+      expect(result).toEqual(usersWithoutPassword);
       expect(userRepository.find).toHaveBeenCalledWith({ relations: ['roles'] });
     });
   });
@@ -205,39 +209,87 @@ describe('AuthService', () => {
   describe('update', () => {
     it('should update user successfully', async () => {
       const updateUserDto = { fullName: 'Updated Name' };
-      const existingUser = { ...mockUser };
-      const authUser = { ...mockUser, roles: [{ name: ValidRoles.admin }] };
-      const updatedUser = { ...mockUser, fullName: 'Updated Name' };
+      const userId = '123';
+      const authUser = { ...mockUser, roles: [{ name: ValidRoles.admin }] }; // Definimos authUser
 
-      userRepository.findOne.mockResolvedValue(existingUser);
-      userRepository.save.mockResolvedValue(updatedUser);
+      // Simula el usuario existente antes de la actualización
+      const existingUser = {
+        id: userId,
+        email: 'test@example.com',
+        fullName: 'Test User', // Nombre antes de la actualización
+        age: 25,
+        password: 'hashedPassword',
+        isActive: true,
+        roles: [{ name: ValidRoles.admin }],
+        subscriptions: [],
+        attendances: [],
+      };
 
-      const result = await service.update('123', updateUserDto, authUser);
+      // Simula el usuario después de la actualización
+      const updatedUser = {
+        ...existingUser, // Copia todas las propiedades
+        fullName: 'Updated Name', // Aplica la actualización
+      };
 
+      // Mock para findOne: debe devolver el usuario existente antes de la actualización
+      userRepository.findOne.mockResolvedValueOnce(existingUser);
+      // Mock para findOne después de la actualización: debe devolver el usuario actualizado
+      userRepository.findOne.mockResolvedValueOnce(updatedUser);
+
+      // Mock para update: debe indicar que la actualización fue exitosa
+      userRepository.update.mockResolvedValue({ affected: 1 });
+
+      // Mock para findOne después de la actualización: debe devolver el usuario actualizado
+      userRepository.findOne.mockResolvedValueOnce(updatedUser);
+
+      const result = await service.update(userId, updateUserDto, authUser);
+
+      // Verifica que se haya llamado findOne con los argumentos correctos
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: { id: userId },
+        relations: ['roles'], // Asegúrate de que el servicio lo llama así
+      });
+
+      // Verifica que se haya llamado save con el objeto usuario modificado
+      expect(userRepository.update).toHaveBeenCalledWith(userId, {
+        fullName: 'Updated Name',
+      });
+
+      // Verifica el resultado del servicio
       expect(result.fullName).toBe('Updated Name');
     });
 
     it('should throw NotFoundException if user not found', async () => {
       const updateUserDto = { fullName: 'Updated Name' };
       const authUser = { ...mockUser, roles: [{ name: ValidRoles.admin }] };
+      const userId = '123';
+
+      // Mock para findOne: simula que no encuentra el usuario
       userRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.update('123', updateUserDto, authUser)).rejects.toThrow(NotFoundException);
+      await expect(service.update(userId, updateUserDto, authUser)).rejects.toThrow(NotFoundException);
     });
 
     it('should hash password if provided in update', async () => {
       const updateUserDto = { password: 'newpassword' };
-      const existingUser = { ...mockUser };
+      const userId = mockUser.id;
+      const existingUser = { ...mockUser, password: 'oldHashedPassword' };
       const authUser = { ...mockUser, roles: [{ name: ValidRoles.admin }] };
-      const hashedPassword = 'newHashedPassword';
+      const newHashedPassword = 'newHashedPassword';
 
       userRepository.findOne.mockResolvedValue(existingUser);
-      (bcrypt.hashSync as jest.Mock).mockReturnValue(hashedPassword);
-      userRepository.save.mockResolvedValue({ ...existingUser, password: hashedPassword });
+      // Mock para bcrypt.hashSync
+      (bcrypt.hashSync as jest.Mock).mockReturnValue(newHashedPassword);
+      // Mock para save: simula el guardado con la nueva contraseña hasheada
+      userRepository.save.mockResolvedValue({ ...existingUser, password: newHashedPassword });
 
-      await service.update('123', updateUserDto, authUser);
+      await service.update(userId, updateUserDto, authUser);
 
+      // Verifica que bcrypt.hashSync se haya llamado con la nueva contraseña
       expect(bcrypt.hashSync).toHaveBeenCalledWith('newpassword', 10);
+
+      // Verifica que save se haya llamado con el usuario actualizado
+      expect(userRepository.update).toHaveBeenCalledWith(existingUser.id, { password: newHashedPassword });
     });
   });
 

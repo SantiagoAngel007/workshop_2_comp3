@@ -7,7 +7,7 @@ describe('SeedController', () => {
   let seedService: SeedService;
 
   const mockSeedService = {
-    executeSeed: jest.fn(),
+    runSeed: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -31,10 +31,10 @@ describe('SeedController', () => {
 
   it('should execute seed', async () => {
     const expectedResult = { message: 'Seed executed successfully' };
-    mockSeedService.executeSeed.mockResolvedValue(expectedResult);
+    mockSeedService.runSeed.mockResolvedValue(expectedResult);
 
     const result = await controller.executeSeed();
     expect(result).toEqual(expectedResult);
-    expect(seedService.executeSeed).toHaveBeenCalled();
+    expect(seedService.runSeed).toHaveBeenCalled();
   });
 });

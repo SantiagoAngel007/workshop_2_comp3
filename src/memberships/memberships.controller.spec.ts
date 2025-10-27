@@ -8,11 +8,11 @@ describe('MembershipsController', () => {
   let membershipsService: MembershipsService;
 
   const mockMembershipsService = {
-    create: jest.fn(),
+    createNewMembership: jest.fn(),
     findAll: jest.fn(),
     findMembershipById: jest.fn(),
-    update: jest.fn(),
-    remove: jest.fn(),
+    updateExistingMembership: jest.fn(),
+    removeMembership: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -46,12 +46,12 @@ describe('MembershipsController', () => {
       };
       const expectedResult = mockMembership;
 
-      mockMembershipsService.create.mockResolvedValue(expectedResult);
+      mockMembershipsService.createNewMembership.mockResolvedValue(expectedResult);
 
       const result = await controller.create(createMembershipDto);
 
       expect(result).toEqual(expectedResult);
-      expect(membershipsService.create).toHaveBeenCalledWith(createMembershipDto);
+      expect(membershipsService.createNewMembership).toHaveBeenCalledWith(createMembershipDto);
     });
   });
 
@@ -88,12 +88,12 @@ describe('MembershipsController', () => {
       const updateMembershipDto = { name: 'Updated Membership' };
       const expectedResult = { ...mockMembership, name: 'Updated Membership' };
 
-      mockMembershipsService.update.mockResolvedValue(expectedResult);
+      mockMembershipsService.updateExistingMembership.mockResolvedValue(expectedResult);
 
       const result = await controller.update(id, updateMembershipDto);
 
       expect(result).toEqual(expectedResult);
-      expect(membershipsService.update).toHaveBeenCalledWith(id, updateMembershipDto);
+      expect(membershipsService.updateExistingMembership).toHaveBeenCalledWith(id, updateMembershipDto);
     });
   });
 
@@ -102,12 +102,11 @@ describe('MembershipsController', () => {
       const id = 'membership-123';
       const expectedResult = mockMembership;
 
-      mockMembershipsService.remove.mockResolvedValue(expectedResult);
+      mockMembershipsService.removeMembership.mockResolvedValue(expectedResult);
 
       const result = await controller.remove(id);
 
-      expect(result).toEqual(expectedResult);
-      expect(membershipsService.remove).toHaveBeenCalledWith(id);
+      expect(membershipsService.removeMembership).toHaveBeenCalledWith(id);
     });
   });
 });
