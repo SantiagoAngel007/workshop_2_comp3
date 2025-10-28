@@ -22,7 +22,11 @@ import { SeedModule } from './seed/seed.module';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       autoLoadEntities: true,
-      synchronize: true,
+      synchronize: true, //False en producción
+
+      //ssl: process.env.NODE_ENV === 'production' ? {
+        //rejectUnauthorized: false
+      //} : false,
     }),
 
     UsersModule,
