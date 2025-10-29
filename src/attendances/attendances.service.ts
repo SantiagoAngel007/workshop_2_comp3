@@ -7,7 +7,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, MoreThanOrEqual } from 'typeorm';
 import { Attendance, AttendanceType } from './entities/attendance.entity';
-import { User } from '../users/entities/user.entity';
 import { Subscription } from '../subscriptions/entities/subscription.entity';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
 import {
@@ -16,6 +15,7 @@ import {
   AttendanceStatsResponse,
 } from './dto/attendance-response.dto';
 import { GetHistoryDto } from './dto/get-history.dto';
+import { User } from 'src/auth/entities/users.entity';
 
 @Injectable()
 export class AttendancesService {

@@ -4,7 +4,7 @@ import { Role } from '../../src/auth/entities/roles.entity';
 import { Subscription } from '../../src/subscriptions/entities/subscription.entity';
 import { Membership } from '../../src/memberships/entities/membership.entity';
 import { ValidRoles } from '../../src/auth/enums/roles.enum';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 export class DatabaseTestUtils {
   static async cleanDatabase(

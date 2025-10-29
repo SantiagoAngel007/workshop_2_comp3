@@ -7,7 +7,7 @@ import { User } from '../src/auth/entities/users.entity';
 import { Role } from '../src/auth/entities/roles.entity';
 import { Repository } from 'typeorm';
 import { ValidRoles } from '../src/auth/enums/roles.enum';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication;
