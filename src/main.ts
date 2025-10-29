@@ -20,25 +20,23 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
 
-    const document = SwaggerModule.createDocument(app, config)
-    SwaggerModule.setup('api-docs', app, document)
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api-docs', app, document);
 
-  await app.listen(process.env.PORT ?? 3000);
-    app.enableCors({
-    origin: '*', // Permitir cualquier origen
+  app.enableCors({
+    origin: '*',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
-
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // Elimina propiedades no definidas en el DTO
-      forbidNonWhitelisted: false, // Lanza error si hay propiedades extra
-      transform: true, // Transforma los payloads a instancias de DTO
+      whitelist: true,
+      forbidNonWhitelisted: false,
+      transform: true,
       transformOptions: {
-        enableImplicitConversion: true, // Convierte tipos automáticamente
+        enableImplicitConversion: true,
       },
     }),
   );
@@ -49,7 +47,7 @@ async function bootstrap() {
 
   logger.log(`Application is running on: http://localhost:${port}`);
   logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  logger.log(` Database: ${process.env.DB_HOST || 'localhost'}`);
+  logger.log(`Database: ${process.env.DB_HOST || 'localhost'}`);
   
 }
 
