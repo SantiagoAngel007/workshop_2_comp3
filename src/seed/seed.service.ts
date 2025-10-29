@@ -34,9 +34,13 @@ private async deleteAllUsersAndRoles() {
     await this.authService.roleRepository.query(`DELETE FROM "roles"`);
     await this.authService.userRepository.query(`ALTER TABLE "user_roles" ENABLE TRIGGER ALL`);
   } catch (error) {
-    // Si la tabla no existe, solo limpia las existentes
-    await this.authService.userRepository.delete({});
-    await this.authService.roleRepository.delete({});
+    // Si la tabla no existe, usa query directo
+    try {
+      await this.authService.userRepository.query(`DELETE FROM "user"`);
+      await this.authService.roleRepository.query(`DELETE FROM "roles"`);
+    } catch (e) {
+      console.log('Tables do not exist yet, will be created by sync');
+    }
   }
 }
 
