@@ -26,18 +26,19 @@ export class SeedService {
     return 'SEED EXECUTED SUCCESSFULLY';
   }
 
-  private async deleteAllUsersAndRoles() {
-    
-  await this.authService.userRepository.query(`ALTER TABLE "user_roles" DISABLE TRIGGER ALL`);
-  
-  await this.authService.userRepository.query(`DELETE FROM "user_roles"`);
-  
-  await this.authService.userRepository.query(`DELETE FROM "user"`);
-  
-  await this.authService.roleRepository.query(`DELETE FROM "roles"`);
-
-  await this.authService.userRepository.query(`ALTER TABLE "user_roles" ENABLE TRIGGER ALL`);
+private async deleteAllUsersAndRoles() {
+  try {
+    await this.authService.userRepository.query(`ALTER TABLE "user_roles" DISABLE TRIGGER ALL`);
+    await this.authService.userRepository.query(`DELETE FROM "user_roles"`);
+    await this.authService.userRepository.query(`DELETE FROM "user"`);
+    await this.authService.roleRepository.query(`DELETE FROM "roles"`);
+    await this.authService.userRepository.query(`ALTER TABLE "user_roles" ENABLE TRIGGER ALL`);
+  } catch (error) {
+    // Si la tabla no existe, solo limpia las existentes
+    await this.authService.userRepository.delete({});
+    await this.authService.roleRepository.delete({});
   }
+}
 
   private async insertRoles() {
     for (const roleName of initialData.roles) {
