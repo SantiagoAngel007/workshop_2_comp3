@@ -8,9 +8,13 @@ import {
   PrimaryGeneratedColumn,
   OneToMany,
 } from 'typeorm';
-import { Role } from './roles.entity';
-import { Subscription } from 'src/subscriptions/entities/subscription.entity';
-import { Attendance } from 'src/attendances/entities/attendance.entity';
+import type { Role } from './roles.entity';
+import { Role as RoleEntity } from './roles.entity';
+import type { Subscription } from 'src/subscriptions/entities/subscription.entity';
+import { Subscription as SubscriptionEntity } from 'src/subscriptions/entities/subscription.entity';
+import type { Attendance } from 'src/attendances/entities/attendance.entity';
+import { Attendance as AttendanceEntity } from 'src/attendances/entities/attendance.entity';
+
 
 @Entity()
 export class User {
@@ -35,12 +39,12 @@ export class User {
   @Column('bool', { default: true })
   isActive: boolean;
 
-  @OneToMany(() => Subscription, (subscription) => subscription.user, {
+  @OneToMany(() => SubscriptionEntity, (subscription) => subscription.user, {
     eager: false,
   })
   subscriptions: Subscription[];
 
-  @ManyToMany(() => Role, { eager: false })
+  @ManyToMany(() => RoleEntity, { eager: false })
   @JoinTable({
     name: 'user_roles',
     joinColumn: { name: 'userId', referencedColumnName: 'id' },
@@ -48,7 +52,7 @@ export class User {
   })
   roles: Role[];
 
-  @OneToMany(() => Attendance, (attendance) => attendance.user, {
+  @OneToMany(() => AttendanceEntity, (attendance) => attendance.user, {
     eager: false,
   })
   attendances: Attendance[];

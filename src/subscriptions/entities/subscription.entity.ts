@@ -1,5 +1,8 @@
-import { User } from 'src/auth/entities/users.entity';
-import { Membership } from 'src/memberships/entities/membership.entity';
+import type { User } from 'src/auth/entities/users.entity';
+import { User as UserEntity } from 'src/auth/entities/users.entity';
+import type { Membership } from 'src/memberships/entities/membership.entity';
+import { Membership as MembershipEntity } from 'src/memberships/entities/membership.entity';
+
 import {
   Column,
   ManyToMany,
@@ -44,10 +47,10 @@ export class Subscription {
   @DeleteDateColumn()
   deleted_at: Date;
 
-  @ManyToOne(() => User, (user) => user.subscriptions, { onDelete: 'CASCADE' })
+  @ManyToOne(() => UserEntity, (user) => user.subscriptions, { onDelete: 'CASCADE' })
   user: User;
 
-  @ManyToMany(() => Membership, (membership) => membership.subscriptions, {
+  @ManyToMany(() => MembershipEntity, (membership) => membership.subscriptions, {
     eager: false,
   })
   @JoinTable({

@@ -8,7 +8,8 @@ import {
   UpdateDateColumn,
   Index,
 } from 'typeorm';
-import { User } from '../../auth/entities/users.entity';
+import type { User } from '../../auth/entities/users.entity';
+import { User as UserEntity } from '../../auth/entities/users.entity';
 
 export enum AttendanceType {
   GYM = 'gym',
@@ -21,7 +22,7 @@ export class Attendance {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, (user) => user.attendances, {
+  @ManyToOne(() => UserEntity, (user) => user.attendances, {
     nullable: false,
     eager: false,
   })

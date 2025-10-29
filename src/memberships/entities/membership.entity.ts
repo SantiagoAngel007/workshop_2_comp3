@@ -1,4 +1,5 @@
-import { Subscription } from '../../subscriptions/entities/subscription.entity';
+import type { Subscription } from '../../subscriptions/entities/subscription.entity';
+import { Subscription as SubscriptionEntity } from '../../subscriptions/entities/subscription.entity';
 import {
   Column,
   ManyToMany,
@@ -41,6 +42,6 @@ export class Membership {
   @DeleteDateColumn()
   deleted_at: Date;
 
-  @ManyToMany(() => Subscription, (subscription) => subscription.memberships, { eager: false })
+  @ManyToMany(() => SubscriptionEntity, (subscription) => subscription.memberships, { eager: false })
   subscriptions: Subscription[];
 }
