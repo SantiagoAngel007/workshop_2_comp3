@@ -211,6 +211,7 @@ export class AttendancesService {
     const count = await this.attendanceRepository.count({
       where: { user: { id: userId }, isActive: true },
     });
+    console.log(`isUserCurrentlyInside: count for user ${userId} is ${count}`); // Added console.log
     return count > 0;
   }
 
@@ -288,9 +289,14 @@ export class AttendancesService {
       string,
       { month: string; gymCount: number; classCount: number }
     >();
+
+    // First group by month and type
     attendances.forEach((attendance) => {
+      // Ensure we create a new Date object for each attendance to handle timezone correctly
       const date = new Date(attendance.entranceDatetime);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      // Format month key with UTC values to avoid timezone issues
+      const monthKey = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+      
       if (!monthlyMap.has(monthKey)) {
         monthlyMap.set(monthKey, {
           month: monthKey,
@@ -298,12 +304,20 @@ export class AttendancesService {
           classCount: 0,
         });
       }
+      
       const monthData = monthlyMap.get(monthKey)!;
-      if (attendance.type === AttendanceType.GYM) monthData.gymCount++;
-      else monthData.classCount++;
+      
+      if (attendance.type === AttendanceType.GYM) {
+        monthData.gymCount++;
+      } else if (attendance.type === AttendanceType.CLASS) {
+        monthData.classCount++;
+      }
     });
-    return Array.from(monthlyMap.values()).sort((a, b) =>
-      a.month.localeCompare(b.month),
-    );
+
+    // Then convert to array and sort by month
+    const monthlyStats = Array.from(monthlyMap.values());
+    monthlyStats.sort((a, b) => a.month.localeCompare(b.month));
+
+    return monthlyStats;
   }
 }

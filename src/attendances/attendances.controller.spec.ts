@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AttendancesController } from './attendances.controller';
 import { AttendancesService } from './attendances.service';
-import { mockAttendance } from '../../test/utils/test-utils';
+import { mockAttendance, mockUser } from '../../test/utils/test-utils';
 
 describe('AttendancesController', () => {
   let controller: AttendancesController;
@@ -9,10 +9,11 @@ describe('AttendancesController', () => {
 
   const mockAttendancesService = {
     checkIn: jest.fn(),
-    checkOut: jest.fn(),
-    getAvailableAttendances: jest.fn(),
-    getAttendanceHistory: jest.fn(),
-    getAttendanceStats: jest.fn(),
+    checkOut: jest.fn(), // This is the service method called by checkOutByReceptionist
+    getUserAttendanceStatus: jest.fn(),
+    getUserAttendanceHistory: jest.fn(),
+    getUserAttendanceStats: jest.fn(),
+    getActiveAttendances: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -44,7 +45,7 @@ describe('AttendancesController', () => {
 
       mockAttendancesService.checkIn.mockResolvedValue(expectedResult);
 
-      const result = await controller.checkIn(createAttendanceDto);
+      const result = await controller.checkIn(createAttendanceDto, mockUser);
 
       expect(result).toEqual(expectedResult);
       expect(attendancesService.checkIn).toHaveBeenCalledWith(createAttendanceDto);
@@ -58,10 +59,10 @@ describe('AttendancesController', () => {
 
       mockAttendancesService.checkOut.mockResolvedValue(expectedResult);
 
-      const result = await controller.checkOut(checkOutDto);
+      const result = await controller.checkOutByReceptionist(checkOutDto);
 
       expect(result).toEqual(expectedResult);
-      expect(attendancesService.checkOut).toHaveBeenCalledWith(checkOutDto);
+      expect(attendancesService.checkOut).toHaveBeenCalledWith(checkOutDto.userId);
     });
   });
 
@@ -70,12 +71,12 @@ describe('AttendancesController', () => {
       const userId = 'user-123';
       const expectedResult = { gym: 25, classes: 5 };
 
-      mockAttendancesService.getAvailableAttendances.mockResolvedValue(expectedResult);
+      mockAttendancesService.getUserAttendanceStatus.mockResolvedValue(expectedResult);
 
-      const result = await controller.getAvailableAttendances(userId);
+      const result = await controller.getStatus(userId);
 
       expect(result).toEqual(expectedResult);
-      expect(attendancesService.getAvailableAttendances).toHaveBeenCalledWith(userId);
+      expect(attendancesService.getUserAttendanceStatus).toHaveBeenCalledWith(userId);
     });
   });
 
@@ -88,12 +89,12 @@ describe('AttendancesController', () => {
       };
       const expectedResult = [mockAttendance];
 
-      mockAttendancesService.getAttendanceHistory.mockResolvedValue(expectedResult);
+      mockAttendancesService.getUserAttendanceHistory.mockResolvedValue(expectedResult);
 
-      const result = await controller.getAttendanceHistory(getHistoryDto);
+      const result = await controller.getHistory(getHistoryDto.userId, getHistoryDto);
 
       expect(result).toEqual(expectedResult);
-      expect(attendancesService.getAttendanceHistory).toHaveBeenCalledWith(getHistoryDto);
+      expect(attendancesService.getUserAttendanceHistory).toHaveBeenCalledWith(getHistoryDto.userId, getHistoryDto);
     });
   });
 
@@ -106,12 +107,12 @@ describe('AttendancesController', () => {
         thisWeek: 2,
       };
 
-      mockAttendancesService.getAttendanceStats.mockResolvedValue(expectedResult);
+      mockAttendancesService.getUserAttendanceStats.mockResolvedValue(expectedResult);
 
-      const result = await controller.getAttendanceStats(userId);
+      const result = await controller.getStats(userId);
 
       expect(result).toEqual(expectedResult);
-      expect(attendancesService.getAttendanceStats).toHaveBeenCalledWith(userId);
+      expect(attendancesService.getUserAttendanceStats).toHaveBeenCalledWith(userId);
     });
   });
 });

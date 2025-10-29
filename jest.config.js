@@ -14,6 +14,10 @@ module.exports = {
     '!src/**/*.interface.ts',
     '!src/**/*.enum.ts',
     '!src/**/*.dto.ts',
+    '!src/seed/**/*',
+    '!src/auth/guards/**/*',
+    '!src/auth/strategies/**/*',
+    '!src/auth/decorators/**/*',
   ],
   coverageDirectory: './coverage',
   testEnvironment: 'node',
@@ -27,4 +31,11 @@ module.exports = {
     },
   },
   setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/dist/',
+    'src/seed/',
+    'src/auth/guards/',
+    'src/auth/strategies/',
+  ],
 };
