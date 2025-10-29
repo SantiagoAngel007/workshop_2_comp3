@@ -154,4 +154,111 @@ describe('Subscription Entity', () => {
       memberships: []
     });
   });
+
+  describe('Edge cases and negative scenarios', () => {
+    it('should handle zero cost', () => {
+      subscription.cost = 0;
+      expect(subscription.cost).toBe(0);
+    });
+
+    it('should handle very high cost', () => {
+      subscription.cost = 999999.99;
+      expect(subscription.cost).toBe(999999.99);
+    });
+
+    it('should handle negative duration (edge case)', () => {
+      subscription.duration_months = -1;
+      expect(subscription.duration_months).toBe(-1);
+    });
+
+    it('should handle zero assistance limits', () => {
+      subscription.max_gym_assistance = 0;
+      subscription.max_classes_assistance = 0;
+      
+      expect(subscription.max_gym_assistance).toBe(0);
+      expect(subscription.max_classes_assistance).toBe(0);
+    });
+
+    it('should handle very high assistance limits', () => {
+      subscription.max_gym_assistance = 999;
+      subscription.max_classes_assistance = 999;
+      
+      expect(subscription.max_gym_assistance).toBe(999);
+      expect(subscription.max_classes_assistance).toBe(999);
+    });
+
+    it('should handle empty name', () => {
+      subscription.name = '';
+      expect(subscription.name).toBe('');
+    });
+
+    it('should handle very long name', () => {
+      const longName = 'A'.repeat(500);
+      subscription.name = longName;
+      expect(subscription.name).toBe(longName);
+      expect(subscription.name.length).toBe(500);
+    });
+
+    it('should handle removing memberships', () => {
+      subscription.memberships = [{ id: 'mem1' }, { id: 'mem2' }];
+      expect(subscription.memberships.length).toBe(2);
+      
+      subscription.memberships = [];
+      expect(subscription.memberships.length).toBe(0);
+    });
+
+    it('should handle property updates multiple times', () => {
+      subscription.isActive = true;
+      expect(subscription.isActive).toBe(true);
+      
+      subscription.isActive = false;
+      expect(subscription.isActive).toBe(false);
+      
+      subscription.isActive = true;
+      expect(subscription.isActive).toBe(true);
+    });
+
+    it('should handle fractional months', () => {
+      subscription.duration_months = 0.5;
+      expect(subscription.duration_months).toBe(0.5);
+    });
+
+    it('should handle very old purchase dates', () => {
+      const oldDate = new Date('2000-01-01');
+      subscription.purchase_date = oldDate;
+      expect(subscription.purchase_date).toEqual(oldDate);
+    });
+
+    it('should handle future purchase dates', () => {
+      const futureDate = new Date('2030-12-31');
+      subscription.purchase_date = futureDate;
+      expect(subscription.purchase_date).toEqual(futureDate);
+    });
+
+    it('should handle user changes', () => {
+      const user1 = { id: 'user-1', email: 'user1@test.com' };
+      const user2 = { id: 'user-2', email: 'user2@test.com' };
+      
+      subscription.user = user1;
+      expect(subscription.user.id).toBe('user-1');
+      
+      subscription.user = user2;
+      expect(subscription.user.id).toBe('user-2');
+    });
+
+    it('should handle adding and removing memberships', () => {
+      subscription.memberships = [];
+      expect(subscription.memberships).toHaveLength(0);
+      
+      subscription.memberships.push({ id: 'mem1' });
+      expect(subscription.memberships).toHaveLength(1);
+      
+      subscription.memberships.push({ id: 'mem2' });
+      expect(subscription.memberships).toHaveLength(2);
+      
+      subscription.memberships = subscription.memberships.filter(m => m.id !== 'mem1');
+      expect(subscription.memberships).toHaveLength(1);
+      expect(subscription.memberships[0].id).toBe('mem2');
+    });
+  });
 });

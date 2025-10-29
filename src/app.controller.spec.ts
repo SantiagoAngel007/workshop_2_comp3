@@ -29,6 +29,11 @@ describe('AppController', () => {
     expect(appController).toBeDefined();
   });
 
+  it('should have appService injected', () => {
+    expect(appService).toBeDefined();
+    expect(appController['appService']).toBeDefined();
+  });
+
   describe('getHello', () => {
     it('should return "Hello World!"', () => {
       const expectedResult = 'Hello World!';

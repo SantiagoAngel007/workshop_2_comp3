@@ -13,6 +13,7 @@ describe('MembershipsController', () => {
     findMembershipById: jest.fn(),
     updateExistingMembership: jest.fn(),
     removeMembership: jest.fn(),
+    toggleMembershipStatus: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -107,6 +108,20 @@ describe('MembershipsController', () => {
       const result = await controller.remove(id);
 
       expect(membershipsService.removeMembership).toHaveBeenCalledWith(id);
+    });
+  });
+
+  describe('toggleStatus', () => {
+    it('should toggle membership status', async () => {
+      const id = 'membership-123';
+      const expectedResult = { ...mockMembership, status: false };
+
+      mockMembershipsService.toggleMembershipStatus.mockResolvedValue(expectedResult);
+
+      const result = await controller.toggleStatus(id);
+
+      expect(result).toEqual(expectedResult);
+      expect(membershipsService.toggleMembershipStatus).toHaveBeenCalledWith(id);
     });
   });
 });

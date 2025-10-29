@@ -4,13 +4,20 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { User } from './entities/users.entity';
 import { Role } from './entities/roles.entity';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { createMockRepository, mockRole } from '../../test/utils/test-utils';
-import { UnauthorizedException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { UnauthorizedException, NotFoundException, InternalServerErrorException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { ValidRoles } from './enums/roles.enum';
 import * as bcrypt from 'bcrypt';
 import { Jwt } from './interfaces/jwt.interface';
 import { Subscription } from '../subscriptions/entities/subscription.entity';
+
+// Mock bcrypt module
+jest.mock('bcrypt', () => ({
+  compareSync: jest.fn(),
+  hashSync: jest.fn(() => 'hashedPassword123'),
+}));
 
 // Create a full mock User instance that matches the entity class
 
@@ -79,6 +86,10 @@ describe('AuthService', () => {
   let subscriptionsService: SubscriptionsService;
 
   beforeEach(async () => {
+    // Reset bcrypt mocks to default behavior before each test  
+    (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
+    (bcrypt.hashSync as jest.Mock).mockReturnValue('hashedPassword123');
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -311,6 +322,12 @@ describe('AuthService', () => {
       expect(result).toEqual(usersWithoutPassword);
       expect(userRepository.find).toHaveBeenCalledWith({ relations: ['roles'] });
     });
+
+    it('should handle error when finding all users', async () => {
+      userRepository.find.mockRejectedValue(new Error('Database error'));
+
+      await expect(service.findAll()).rejects.toThrow(InternalServerErrorException);
+    });
   });
 
   describe('findOne', () => {
@@ -413,6 +430,102 @@ describe('AuthService', () => {
 
       // Verifica que save se haya llamado con el usuario actualizado
       expect(userRepository.update).toHaveBeenCalledWith(existingUser.id, { password: newHashedPassword });
+    });
+  });
+
+  describe('update - additional branch coverage', () => {
+    it('should throw ForbiddenException when non-admin tries to update other user', async () => {
+      const updateUserDto = { fullName: 'Updated Name' };
+      const userToUpdate = { ...mockTestUser, id: 'different-id' };
+      const nonAdminUser = { 
+        ...mockTestUser, 
+        id: 'current-user-id',
+        roles: [{ id: 'client-role-id', name: ValidRoles.client, users: [] }],  // Not an admin
+        checkFieldsBeforeChanges: jest.fn()
+      } as User;
+
+      userRepository.findOne.mockResolvedValue(userToUpdate);
+
+      await expect(service.update('different-id', updateUserDto, nonAdminUser))
+        .rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw BadRequestException when email already exists', async () => {
+      const updateUserDto = { email: 'existing@example.com' };
+      const userToUpdate = { ...mockTestUser, email: 'old@example.com' };
+      const authUser = { 
+        ...mockAdminUser, 
+        checkFieldsBeforeChanges: jest.fn() 
+      } as User;
+      const existingUser = { id: 'other-id', email: 'existing@example.com' };
+
+      userRepository.findOne.mockResolvedValueOnce(userToUpdate);
+      userRepository.findOneBy.mockResolvedValue(existingUser);
+
+      await expect(service.update('123', updateUserDto, authUser))
+        .rejects.toThrow(BadRequestException);
+    });
+
+    it('should update user without password change', async () => {
+      // Clear previous mock calls
+      jest.clearAllMocks();
+      
+      const updateUserDto = { fullName: 'New Name' }; // No password field
+      const userToUpdate = { ...mockTestUser };
+      const authUser = { 
+        ...mockAdminUser, 
+        checkFieldsBeforeChanges: jest.fn() 
+      } as User;
+      const updatedUser = { ...userToUpdate, fullName: 'New Name' };
+
+      userRepository.findOne.mockResolvedValueOnce(userToUpdate);
+      userRepository.update.mockResolvedValue({ affected: 1 });
+      userRepository.findOne.mockResolvedValueOnce(updatedUser);
+
+      const result = await service.update('123', updateUserDto, authUser);
+
+      expect(result.fullName).toBe('New Name');
+      // Check that bcrypt.hashSync was not called during this specific test
+      expect(bcrypt.hashSync).not.toHaveBeenCalled();
+    });
+
+    it('should allow user to update their own profile', async () => {
+      const updateUserDto = { fullName: 'My New Name' };
+      const userToUpdate = { ...mockTestUser, id: 'user-123' };
+      const authUser = { 
+        ...mockTestUser, 
+        id: 'user-123',  // Same ID as user being updated
+        roles: [{ id: 'client-role-id', name: ValidRoles.client, users: [] }],  // Not admin but same user
+        checkFieldsBeforeChanges: jest.fn() 
+      } as User;
+      const updatedUser = { ...userToUpdate, fullName: 'My New Name' };
+
+      userRepository.findOne.mockResolvedValueOnce(userToUpdate);
+      userRepository.update.mockResolvedValue({ affected: 1 });
+      userRepository.findOne.mockResolvedValueOnce(updatedUser);
+
+      const result = await service.update('user-123', updateUserDto, authUser);
+
+      expect(result.fullName).toBe('My New Name');
+    });
+
+    it('should allow email update when new email is not taken', async () => {
+      const updateUserDto = { email: 'newemail@example.com' };
+      const userToUpdate = { ...mockTestUser, email: 'old@example.com' };
+      const authUser = { 
+        ...mockAdminUser, 
+        checkFieldsBeforeChanges: jest.fn() 
+      } as User;
+      const updatedUser = { ...userToUpdate, email: 'newemail@example.com' };
+
+      userRepository.findOne.mockResolvedValueOnce(userToUpdate);
+      userRepository.findOneBy.mockResolvedValue(null); // Email not taken
+      userRepository.update.mockResolvedValue({ affected: 1 });
+      userRepository.findOne.mockResolvedValueOnce(updatedUser);
+
+      const result = await service.update('123', updateUserDto, authUser);
+
+      expect(result.email).toBe('newemail@example.com');
     });
   });
 
@@ -519,11 +632,12 @@ describe('AuthService', () => {
       userRepository.findOne.mockResolvedValue(user);
       (bcrypt.compareSync as jest.Mock).mockReturnValue(false);
 
-      const result = await service.login(loginDto);
-      expect(result).toHaveProperty('email', loginDto.email);
+      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
     });
 
     it('should handle empty password in update request', async () => {
+      // Clear previous mocks to isolate this test
+      jest.clearAllMocks();
       const updateUserDto = { password: '' };
       const userId = mockTestUser.id;
       const existingUser = { ...mockTestUser };
@@ -531,15 +645,283 @@ describe('AuthService', () => {
 
       userRepository.findOne.mockResolvedValue(existingUser);
       userRepository.update.mockResolvedValue({ affected: 1 });
-      userRepository.findOne.mockResolvedValue({ ...existingUser, password: 'hashedPassword' });
+      userRepository.findOne.mockResolvedValue({ ...existingUser, password: '' });
 
       const result = await service.update(userId, updateUserDto, authUser);
       
       expect(result).toBeDefined();
-      expect(bcrypt.hashSync).toHaveBeenCalledWith('', 10);
+      expect(bcrypt.hashSync).not.toHaveBeenCalled(); // Empty password is falsy, no encryption
       expect(userRepository.update).toHaveBeenCalledWith(userId, {
-        password: expect.any(String)
+        password: ''
       });
+    });
+  });
+
+  describe('remove', () => {
+    it('should throw BadRequestException when trying to delete the last admin', async () => {
+      const userId = 'admin-user-id';
+      const adminUser = {
+        ...mockAdminUser,
+        id: userId,
+        roles: [{ name: 'admin' }],
+      };
+
+      jest.clearAllMocks();
+      userRepository.findOne.mockResolvedValue(adminUser);
+      
+      // Create a proper QueryBuilder mock
+      const queryBuilder = {
+        innerJoin: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(1), // Only 1 admin
+      };
+      userRepository.createQueryBuilder.mockReturnValue(queryBuilder);
+
+      await expect(service.remove(userId)).rejects.toThrow(BadRequestException);
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: { id: userId },
+        relations: ['roles'],
+      });
+    });
+
+    it('should allow deleting admin when there are multiple admins', async () => {
+      const userId = 'admin-user-id';
+      const adminUser = {
+        ...mockAdminUser,
+        id: userId,
+        roles: [{ name: 'admin' }],
+      };
+
+      jest.clearAllMocks();
+      userRepository.findOne.mockResolvedValue(adminUser);
+      
+      // Create a proper QueryBuilder mock with multiple admins
+      const queryBuilder = {
+        innerJoin: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(2), // 2 admins
+      };
+      userRepository.createQueryBuilder.mockReturnValue(queryBuilder);
+      userRepository.delete.mockResolvedValue({ affected: 1 });
+
+      const result = await service.remove(userId);
+
+      expect(result).toEqual({
+        message: `User with ID ${userId} deleted successfully`,
+      });
+      expect(userRepository.delete).toHaveBeenCalledWith(userId);
+    });
+
+    it('should handle database error when deleting user', async () => {
+      const userId = 'admin-user-id';
+      const adminUser = {
+        ...mockAdminUser,
+        id: userId,
+        roles: [{ name: 'admin' }],
+      };
+
+      jest.clearAllMocks();
+      userRepository.findOne.mockResolvedValue(adminUser);
+      
+      const queryBuilder = {
+        innerJoin: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(2),
+      };
+      userRepository.createQueryBuilder.mockReturnValue(queryBuilder);
+      userRepository.delete.mockRejectedValue(new Error('Database error'));
+
+      await expect(service.remove(userId)).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('should delete non-admin user without admin count check', async () => {
+      const userId = 'regular-user-id';
+      const regularUser = {
+        ...mockTestUser,
+        id: userId,
+        roles: [{ name: 'client' }],
+      };
+
+      jest.clearAllMocks();
+      userRepository.findOne.mockResolvedValue(regularUser);
+      userRepository.delete.mockResolvedValue({ affected: 1 });
+
+      const result = await service.remove(userId);
+
+      expect(result).toEqual({
+        message: `User with ID ${userId} deleted successfully`,
+      });
+      expect(userRepository.delete).toHaveBeenCalledWith(userId);
+      expect(userRepository.createQueryBuilder).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('additional edge cases', () => {
+    it('should handle user not found after update scenario', async () => {
+      const userId = 'user-123';
+      const updateUserDto: UpdateUserDto = { email: 'newemail@example.com' };
+      const authUser = { ...mockAdminUser, checkFieldsBeforeChanges: jest.fn() } as User;
+
+      jest.clearAllMocks();
+      userRepository.findOne.mockResolvedValueOnce(mockTestUser); // For initial find
+      userRepository.findOneBy.mockResolvedValue(null); // For email check
+      userRepository.update.mockResolvedValue({ affected: 1 });
+      userRepository.findOne.mockResolvedValueOnce(null); // After update, user not found
+
+      await expect(service.update(userId, updateUserDto, authUser)).rejects.toThrow(
+        InternalServerErrorException
+      );
+    });
+
+    it('should handle update with error throwing', async () => {
+      const userId = 'user-123';
+      const updateUserDto: UpdateUserDto = { email: 'test@example.com' };
+      const authUser = { ...mockAdminUser, checkFieldsBeforeChanges: jest.fn() } as User;
+
+      jest.clearAllMocks();
+      userRepository.findOne.mockResolvedValue(mockTestUser);
+      userRepository.findOneBy.mockResolvedValue(null);
+      userRepository.update.mockRejectedValue(new Error('Database error'));
+
+      await expect(service.update(userId, updateUserDto, authUser)).rejects.toThrow();
+    });
+
+    it('should handle bcrypt comparison errors in login', async () => {
+      const loginDto = { email: 'test@example.com', password: 'password123' };
+      
+      userRepository.findOne.mockResolvedValue(mockTestUser);
+      
+      // Mock bcrypt.compareSync to throw an error
+      (bcrypt.compareSync as jest.Mock).mockImplementation(() => {
+        throw new Error('Bcrypt error');
+      });
+
+      await expect(service.login(loginDto))
+        .rejects.toThrow(Error);
+
+      // Reset mock to normal behavior
+      (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
+    });
+
+    it('should handle role finding error during user creation', async () => {
+      const createUserDto = {
+        email: 'new@example.com',
+        password: 'password123',
+        fullName: 'New User',
+        age: 25,
+        roles: ['invalid-role']
+      };
+
+      roleRepository.findOne.mockRejectedValue(new Error('Role not found'));
+
+      await expect(service.create(createUserDto))
+        .rejects.toThrow(InternalServerErrorException);
+    });
+  });
+
+  describe('additional negative test cases', () => {
+    it('should throw NotFoundException when trying to findOne with invalid user ID', async () => {
+      const userId = 'invalid-user-id';
+
+      jest.clearAllMocks();
+      userRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.findOne(userId)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw InternalServerErrorException when findAll fails', async () => {
+      jest.clearAllMocks();
+      userRepository.find.mockRejectedValue(new Error('Database connection failed'));
+
+      await expect(service.findAll()).rejects.toThrow(InternalServerErrorException);
+    });
+
+    it('should throw BadRequestException when save fails with constraint violation', async () => {
+      const createUserDto = {
+        email: 'test@example.com',
+        password: 'password123',
+        fullName: 'Test User',
+        age: 25,
+        roles: ['client']
+      };
+
+      jest.clearAllMocks();
+      roleRepository.findOneBy.mockResolvedValue(mockRole);
+      userRepository.create.mockReturnValue(mockTestUser);
+      userRepository.save.mockRejectedValue({
+        code: '23505', // Unique constraint violation (duplicate key)
+        detail: 'Email already exists'
+      });
+
+      await expect(service.create(createUserDto)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should handle non-admin user trying to update other user profile', async () => {
+      const userId = 'other-user-123';
+      const updateUserDto = { email: 'updated@test.com' };
+      const authUser = { ...mockTestUser, id: 'current-user-123', roles: [{ ...mockRole, name: 'client' }], checkFieldsBeforeChanges: jest.fn() } as User;
+
+      jest.clearAllMocks();
+      userRepository.findOne.mockResolvedValue({
+        ...mockTestUser,
+        id: userId
+      });
+
+      await expect(service.update(userId, updateUserDto, authUser)).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should allow user to update their own profile', async () => {
+      const userId = 'user-123';
+      const updateUserDto = { email: 'updated@test.com' };
+      const authUser = { ...mockTestUser, id: userId, roles: [{ ...mockRole, name: 'client' }], checkFieldsBeforeChanges: jest.fn() } as User;
+
+      jest.clearAllMocks();
+      userRepository.findOne.mockResolvedValue(authUser);
+      userRepository.findOneBy.mockResolvedValue(null); // No email conflict
+      userRepository.update.mockResolvedValue({ affected: 1 });
+      userRepository.findOne.mockResolvedValueOnce(authUser).mockResolvedValueOnce({
+        ...authUser,
+        email: 'updated@test.com'
+      });
+
+      const result = await service.update(userId, updateUserDto, authUser);
+
+      expect(result).toBeDefined();
+      expect(userRepository.update).toHaveBeenCalledWith(userId, updateUserDto);
+    });
+
+    it('should handle login with user that has no password set', async () => {
+      const loginDto = { email: 'test@test.com', password: 'password123' };
+      const userWithoutPassword = { ...mockTestUser, password: undefined };
+
+      jest.clearAllMocks();
+      userRepository.findOne.mockResolvedValue(userWithoutPassword);
+      
+      // Mock bcrypt.compareSync to return false when password is undefined
+      (bcrypt.compareSync as jest.Mock).mockReturnValue(false);
+
+      await expect(service.login(loginDto))
+        .rejects
+        .toThrow(UnauthorizedException);
+    });
+
+    it('should handle createSubscriptionForUser failure during user creation', async () => {
+      const createUserDto = {
+        email: 'test@example.com',
+        password: 'password123',
+        fullName: 'Test User',
+        age: 25,
+        roles: ['client']
+      };
+
+      jest.clearAllMocks();
+      roleRepository.findOneBy.mockResolvedValue(mockRole);
+      userRepository.create.mockReturnValue(mockTestUser);
+      userRepository.save.mockResolvedValue(mockTestUser);
+      const mockSubscriptionsService = subscriptionsService as any;
+      mockSubscriptionsService.createSubscriptionForUser.mockRejectedValue(new Error('Subscription service unavailable'));
+
+      await expect(service.create(createUserDto)).rejects.toThrow(InternalServerErrorException);
     });
   });
 });

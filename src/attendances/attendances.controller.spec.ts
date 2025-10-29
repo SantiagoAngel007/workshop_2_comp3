@@ -115,4 +115,20 @@ describe('AttendancesController', () => {
       expect(attendancesService.getUserAttendanceStats).toHaveBeenCalledWith(userId);
     });
   });
+
+  describe('getAllActive', () => {
+    it('should return all active attendance records', async () => {
+      const expectedResult = [
+        { ...mockAttendance, isActive: true },
+        { ...mockAttendance, id: 'attendance-2', isActive: true }
+      ];
+
+      mockAttendancesService.getActiveAttendances.mockResolvedValue(expectedResult);
+
+      const result = await controller.getAllActive();
+
+      expect(result).toEqual(expectedResult);
+      expect(attendancesService.getActiveAttendances).toHaveBeenCalled();
+    });
+  });
 });

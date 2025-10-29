@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, MoreThanOrEqual } from 'typeorm';
 import { Attendance, AttendanceType } from './entities/attendance.entity';
-import { User } from '../users/entities/user.entity';
+import { User } from '../auth/entities/users.entity';
 import { Subscription } from '../subscriptions/entities/subscription.entity';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
 import {

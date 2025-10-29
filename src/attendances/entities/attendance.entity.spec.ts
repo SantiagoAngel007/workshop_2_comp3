@@ -96,4 +96,72 @@ describe('Attendance Entity', () => {
       expect(AttendanceType.CLASS).toBe('class');
     });
   });
+
+  describe('Edge cases and negative scenarios', () => {
+    it('should handle null user', () => {
+      attendance.user = null;
+      expect(attendance.user).toBeNull();
+    });
+
+    it('should handle empty dateKey', () => {
+      attendance.dateKey = '';
+      expect(attendance.dateKey).toBe('');
+    });
+
+    it('should handle type changes between GYM and CLASS', () => {
+      attendance.type = AttendanceType.GYM;
+      expect(attendance.type).toBe(AttendanceType.GYM);
+
+      attendance.type = AttendanceType.CLASS;
+      expect(attendance.type).toBe(AttendanceType.CLASS);
+
+      attendance.type = AttendanceType.GYM;
+      expect(attendance.type).toBe(AttendanceType.GYM);
+    });
+
+    it('should handle multiple isActive toggles', () => {
+      attendance.isActive = true;
+      expect(attendance.isActive).toBe(true);
+
+      attendance.isActive = false;
+      expect(attendance.isActive).toBe(false);
+
+      attendance.isActive = true;
+      expect(attendance.isActive).toBe(true);
+    });
+
+    it('should handle entrance and exit same time', () => {
+      const sameTime = new Date('2025-10-27T10:00:00Z');
+      attendance.entranceDatetime = sameTime;
+      attendance.exitDatetime = sameTime;
+
+      expect(attendance.entranceDatetime).toEqual(attendance.exitDatetime);
+    });
+
+    it('should handle very old dates', () => {
+      const oldDate = new Date('2020-01-01T00:00:00Z');
+      attendance.entranceDatetime = oldDate;
+      attendance.created_at = oldDate;
+
+      expect(attendance.entranceDatetime).toEqual(oldDate);
+      expect(attendance.created_at).toEqual(oldDate);
+    });
+
+    it('should handle future dates', () => {
+      const futureDate = new Date('2030-12-31T23:59:59Z');
+      attendance.entranceDatetime = futureDate;
+
+      expect(attendance.entranceDatetime).toEqual(futureDate);
+    });
+
+    it('should handle property reassignments', () => {
+      const newUser = { id: 'user-456', email: 'new@example.com' };
+      attendance.user = newUser;
+      expect(attendance.user.id).toBe('user-456');
+
+      const newId = 'attendance-456';
+      attendance.id = newId;
+      expect(attendance.id).toBe(newId);
+    });
+  });
 });
