@@ -1,4 +1,4 @@
-# Temple Gym API
+# Gym
 
 Sistema backend para gestión de gimnasio desarrollado con NestJS, TypeORM y PostgreSQL. Incluye autenticación JWT, autorización por roles, gestión de membresías, suscripciones y control de asistencias.
 
