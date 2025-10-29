@@ -1,0 +1,13 @@
+# Configuración para Railway: Usa Bun en producción
+
+[phases.setup]
+nixPkgs = ['bun']
+
+[phases.install]
+cmds = ['bun install']
+
+[phases.build]
+cmds = ['bun run build']
+
+[start]
+cmd = 'bun run dist/main.js'
