@@ -18,10 +18,10 @@ import {
 import { ValidRoles } from './enums/roles.enum';
 import { Jwt } from './interfaces/jwt.interface';
 import { Subscription } from '../subscriptions/entities/subscription.entity';
+import * as bcrypt from 'bcryptjs';
 
 // Use manual mock from __mocks__/bcryptjs.js
 jest.mock('bcryptjs');
-const bcrypt = require('bcryptjs');
 
 // Create a full mock User instance that matches the entity class
 

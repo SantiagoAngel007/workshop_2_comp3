@@ -88,7 +88,7 @@ describe('SubscriptionsService', () => {
       const userId = 'user-123';
       userRepository.findOne.mockResolvedValue(mockUser);
       subscriptionRepository.findOne.mockResolvedValue(null); // No active subscription
-      subscriptionRepository.create.mockImplementation((dto) => dto);
+      subscriptionRepository.create.mockImplementation((dto) => dto as Subscription);
       subscriptionRepository.save.mockResolvedValue(mockSubscription);
 
       const result = await service.createSubscriptionForUser(userId);

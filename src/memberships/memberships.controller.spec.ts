@@ -118,6 +118,7 @@ describe('MembershipsController', () => {
 
       const result = await controller.remove(id);
 
+      expect(result).toEqual(expectedResult);
       expect(membershipsService.removeMembership).toHaveBeenCalledWith(id);
     });
   });
