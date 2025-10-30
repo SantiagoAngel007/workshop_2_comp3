@@ -100,7 +100,9 @@ describe('MembershipsService', () => {
 
       membershipRepository.findOne.mockResolvedValue(mockMembership);
 
-      await expect(service.createNewMembership(createMembershipDto)).rejects.toThrow(ConflictException);
+      await expect(
+        service.createNewMembership(createMembershipDto),
+      ).rejects.toThrow(ConflictException);
     });
   });
 
@@ -124,7 +126,10 @@ describe('MembershipsService', () => {
       });
       membershipRepository.save.mockResolvedValue(updatedMembership);
 
-      const result = await service.updateExistingMembership(membershipId, updateMembershipDto);
+      const result = await service.updateExistingMembership(
+        membershipId,
+        updateMembershipDto,
+      );
 
       expect(result).toEqual(updatedMembership);
     });
@@ -135,7 +140,9 @@ describe('MembershipsService', () => {
 
       membershipRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.updateExistingMembership(membershipId, updateMembershipDto)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.updateExistingMembership(membershipId, updateMembershipDto),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -148,7 +155,9 @@ describe('MembershipsService', () => {
 
       await service.removeMembership(membershipId);
 
-      expect(membershipRepository.softRemove).toHaveBeenCalledWith(mockMembership);
+      expect(membershipRepository.softRemove).toHaveBeenCalledWith(
+        mockMembership,
+      );
     });
 
     it('should throw NotFoundException if membership not found', async () => {
@@ -156,7 +165,9 @@ describe('MembershipsService', () => {
 
       membershipRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.removeMembership(membershipId)).rejects.toThrow(NotFoundException);
+      await expect(service.removeMembership(membershipId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -182,7 +193,9 @@ describe('MembershipsService', () => {
     it('should throw NotFoundException if membership not found', async () => {
       membershipRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.findMembershipById('invalid-id')).rejects.toThrow(NotFoundException);
+      await expect(service.findMembershipById('invalid-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

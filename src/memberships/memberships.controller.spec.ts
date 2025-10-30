@@ -47,12 +47,16 @@ describe('MembershipsController', () => {
       };
       const expectedResult = mockMembership;
 
-      mockMembershipsService.createNewMembership.mockResolvedValue(expectedResult);
+      mockMembershipsService.createNewMembership.mockResolvedValue(
+        expectedResult,
+      );
 
       const result = await controller.create(createMembershipDto);
 
       expect(result).toEqual(expectedResult);
-      expect(membershipsService.createNewMembership).toHaveBeenCalledWith(createMembershipDto);
+      expect(membershipsService.createNewMembership).toHaveBeenCalledWith(
+        createMembershipDto,
+      );
     });
   });
 
@@ -91,12 +95,17 @@ describe('MembershipsController', () => {
       const updateMembershipDto = { name: 'Updated Membership' };
       const expectedResult = { ...mockMembership, name: 'Updated Membership' };
 
-      mockMembershipsService.updateExistingMembership.mockResolvedValue(expectedResult);
+      mockMembershipsService.updateExistingMembership.mockResolvedValue(
+        expectedResult,
+      );
 
       const result = await controller.update(id, updateMembershipDto);
 
       expect(result).toEqual(expectedResult);
-      expect(membershipsService.updateExistingMembership).toHaveBeenCalledWith(id, updateMembershipDto);
+      expect(membershipsService.updateExistingMembership).toHaveBeenCalledWith(
+        id,
+        updateMembershipDto,
+      );
     });
   });
 
@@ -118,12 +127,16 @@ describe('MembershipsController', () => {
       const id = 'membership-123';
       const expectedResult = { ...mockMembership, status: false };
 
-      mockMembershipsService.toggleMembershipStatus.mockResolvedValue(expectedResult);
+      mockMembershipsService.toggleMembershipStatus.mockResolvedValue(
+        expectedResult,
+      );
 
       const result = await controller.toggleStatus(id);
 
       expect(result).toEqual(expectedResult);
-      expect(membershipsService.toggleMembershipStatus).toHaveBeenCalledWith(id);
+      expect(membershipsService.toggleMembershipStatus).toHaveBeenCalledWith(
+        id,
+      );
     });
   });
 });

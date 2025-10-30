@@ -39,7 +39,7 @@ describe('Membership Entity', () => {
   it('should handle cost updates', () => {
     membership.cost = 149.99;
     expect(membership.cost).toBe(149.99);
-    
+
     membership.cost = 0;
     expect(membership.cost).toBe(0);
   });
@@ -63,7 +63,7 @@ describe('Membership Entity', () => {
   it('should handle subscription relationship', () => {
     const mockSubscription = {
       id: 'subscription-123',
-      isActive: true
+      isActive: true,
     };
 
     membership.Subscription = [mockSubscription];
@@ -75,7 +75,7 @@ describe('Membership Entity', () => {
     const mockSubscriptions = [
       { id: 'subscription-1', isActive: true },
       { id: 'subscription-2', isActive: true },
-      { id: 'subscription-3', isActive: false }
+      { id: 'subscription-3', isActive: false },
     ];
 
     membership.Subscription = mockSubscriptions;
@@ -111,7 +111,7 @@ describe('Membership Entity', () => {
   it('should handle status changes', () => {
     membership.status = false;
     expect(membership.status).toBe(false);
-    
+
     membership.status = true;
     expect(membership.status).toBe(true);
   });
@@ -119,9 +119,9 @@ describe('Membership Entity', () => {
   it('should handle subscription relationships', () => {
     const mockSubscriptions = [
       { id: 'sub1', name: 'Test Sub 1' },
-      { id: 'sub2', name: 'Test Sub 2' }
+      { id: 'sub2', name: 'Test Sub 2' },
     ];
-    
+
     membership.Subscription = mockSubscriptions;
     expect(membership.Subscription).toBe(mockSubscriptions);
     expect(membership.Subscription.length).toBe(2);
@@ -130,7 +130,7 @@ describe('Membership Entity', () => {
   it('should handle cost updates', () => {
     membership.cost = 149.99;
     expect(membership.cost).toBe(149.99);
-    
+
     membership.cost = 0;
     expect(membership.cost).toBe(0);
   });
@@ -138,7 +138,7 @@ describe('Membership Entity', () => {
   it('should handle duration changes', () => {
     membership.duration_months = 3;
     expect(membership.duration_months).toBe(3);
-    
+
     membership.duration_months = 12;
     expect(membership.duration_months).toBe(12);
   });
@@ -146,7 +146,7 @@ describe('Membership Entity', () => {
   it('should handle assistance limits', () => {
     membership.max_gym_assistance = 20;
     membership.max_classes_assistance = 8;
-    
+
     expect(membership.max_gym_assistance).toBe(20);
     expect(membership.max_classes_assistance).toBe(8);
   });
@@ -170,7 +170,7 @@ describe('Membership Entity', () => {
     it('should handle zero assistance limits', () => {
       membership.max_gym_assistance = 0;
       membership.max_classes_assistance = 0;
-      
+
       expect(membership.max_gym_assistance).toBe(0);
       expect(membership.max_classes_assistance).toBe(0);
     });
@@ -178,7 +178,7 @@ describe('Membership Entity', () => {
     it('should handle very high assistance limits', () => {
       membership.max_gym_assistance = 999;
       membership.max_classes_assistance = 999;
-      
+
       expect(membership.max_gym_assistance).toBe(999);
       expect(membership.max_classes_assistance).toBe(999);
     });
@@ -203,7 +203,7 @@ describe('Membership Entity', () => {
     it('should handle removing subscriptions', () => {
       membership.Subscription = [{ id: 'sub1' }, { id: 'sub2' }];
       expect(membership.Subscription.length).toBe(2);
-      
+
       membership.Subscription = [];
       expect(membership.Subscription.length).toBe(0);
     });
@@ -211,10 +211,10 @@ describe('Membership Entity', () => {
     it('should handle property updates multiple times', () => {
       membership.status = true;
       expect(membership.status).toBe(true);
-      
+
       membership.status = false;
       expect(membership.status).toBe(false);
-      
+
       membership.status = true;
       expect(membership.status).toBe(true);
     });

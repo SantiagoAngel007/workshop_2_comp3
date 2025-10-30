@@ -10,7 +10,12 @@ describe('SeedService', () => {
 
   const mockAuthService = {
     userRepository: { query: jest.fn() },
-    roleRepository: { query: jest.fn(), create: jest.fn(), save: jest.fn(), findOneBy: jest.fn() },
+    roleRepository: {
+      query: jest.fn(),
+      create: jest.fn(),
+      save: jest.fn(),
+      findOneBy: jest.fn(),
+    },
     encryptPassword: jest.fn(),
   };
 

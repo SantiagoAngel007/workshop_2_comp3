@@ -54,6 +54,8 @@ describe('JwtStrategy', () => {
     const payload = { id: 'invalid-user' };
     userRepository.findOne.mockResolvedValue(null);
 
-    await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
+    await expect(strategy.validate(payload)).rejects.toThrow(
+      UnauthorizedException,
+    );
   });
 });

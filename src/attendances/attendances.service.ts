@@ -16,7 +16,6 @@ import {
   AttendanceStatsResponse,
 } from './dto/attendance-response.dto';
 import { GetHistoryDto } from './dto/get-history.dto';
-import { User } from 'src/auth/entities/users.entity';
 
 @Injectable()
 export class AttendancesService {
@@ -287,7 +286,7 @@ export class AttendancesService {
       const date = new Date(attendance.entranceDatetime);
       // Format month key with UTC values to avoid timezone issues
       const monthKey = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
-      
+
       if (!monthlyMap.has(monthKey)) {
         monthlyMap.set(monthKey, {
           month: monthKey,
@@ -295,9 +294,9 @@ export class AttendancesService {
           classCount: 0,
         });
       }
-      
+
       const monthData = monthlyMap.get(monthKey)!;
-      
+
       if (attendance.type === AttendanceType.GYM) {
         monthData.gymCount++;
       } else if (attendance.type === AttendanceType.CLASS) {

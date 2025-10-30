@@ -8,42 +8,44 @@ describe('User Entity', () => {
   // This ensures TypeORM processes the decorators and executes lifecycle hooks
   beforeAll(() => {
     const metadata = getMetadataArgsStorage();
-    
+
     // Access entity listeners metadata to trigger lifecycle hook execution
-    const userListeners = metadata.entityListeners.filter(l => l.target === User);
-    
+    const userListeners = metadata.entityListeners.filter(
+      (l) => l.target === User,
+    );
+
     // Create a test user to invoke lifecycle hooks
     const mockUser = new User();
     mockUser.email = 'TEST@EXAMPLE.COM  ';
-    
+
     // Manually invoke each listener to ensure coverage
-    userListeners.forEach(listener => {
+    userListeners.forEach((listener) => {
       try {
         // Get the actual method from the prototype
         const method = (mockUser as any)[listener.propertyName];
         if (typeof method === 'function') {
           method.call(mockUser);
         }
-      } catch (e) {
+      } catch {
         // Ignore errors
       }
     });
-    
+
     // Also call the method directly
     try {
       mockUser.checkFieldsBeforeChanges();
-    } catch (e) {
+    } catch {
       // Ignore errors
     }
-    
+
     // Execute relation type functions to cover arrow functions in decorators
-    const userRelations = metadata.relations.filter(r => r.target === User);
-    userRelations.forEach(relation => {
+    const userRelations = metadata.relations.filter((r) => r.target === User);
+    userRelations.forEach((relation) => {
       // Execute the type function: () => Role, () => Subscription, etc.
       if (typeof relation.type === 'function' && relation.type.length === 0) {
         try {
-          (relation.type as () => Function)();
-        } catch (e) {
+          (relation.type as () => any)();
+        } catch {
           // Ignore errors
         }
       }
@@ -98,8 +100,8 @@ describe('User Entity', () => {
       user.roles = [adminRole, clientRole];
 
       expect(user.roles).toHaveLength(2);
-      expect(user.roles.map(r => r.name)).toContain(ValidRoles.admin);
-      expect(user.roles.map(r => r.name)).toContain(ValidRoles.client);
+      expect(user.roles.map((r) => r.name)).toContain(ValidRoles.admin);
+      expect(user.roles.map((r) => r.name)).toContain(ValidRoles.client);
     });
 
     it('should handle empty roles array', () => {
@@ -199,16 +201,16 @@ describe('User Entity', () => {
   describe('property mutations and assignments', () => {
     it('should handle multiple property changes', () => {
       const newUser = new User();
-      
+
       newUser.id = 'id-1';
       expect(newUser.id).toBe('id-1');
-      
+
       newUser.id = 'id-2';
       expect(newUser.id).toBe('id-2');
-      
+
       newUser.fullName = 'Name 1';
       expect(newUser.fullName).toBe('Name 1');
-      
+
       newUser.fullName = 'Name 2';
       expect(newUser.fullName).toBe('Name 2');
     });
@@ -216,7 +218,7 @@ describe('User Entity', () => {
     it('should handle age property changes', () => {
       user.age = 30;
       expect(user.age).toBe(30);
-      
+
       user.age = 35;
       expect(user.age).toBe(35);
     });
@@ -224,10 +226,10 @@ describe('User Entity', () => {
     it('should handle isActive property toggles', () => {
       user.isActive = true;
       expect(user.isActive).toBe(true);
-      
+
       user.isActive = false;
       expect(user.isActive).toBe(false);
-      
+
       user.isActive = true;
       expect(user.isActive).toBe(true);
     });
@@ -235,7 +237,7 @@ describe('User Entity', () => {
     it('should handle password changes', () => {
       user.password = 'password1';
       expect(user.password).toBe('password1');
-      
+
       user.password = 'password2';
       expect(user.password).toBe('password2');
     });
@@ -243,16 +245,16 @@ describe('User Entity', () => {
     it('should handle array property operations', () => {
       const role1 = new Role();
       role1.id = 'role-1';
-      
+
       const role2 = new Role();
       role2.id = 'role-2';
-      
+
       user.roles = [role1];
       expect(user.roles).toHaveLength(1);
-      
+
       user.roles.push(role2);
       expect(user.roles).toHaveLength(2);
-      
+
       user.roles = [];
       expect(user.roles).toHaveLength(0);
     });
@@ -265,10 +267,10 @@ describe('User Entity', () => {
       const originalAge = user.age;
       const originalPassword = user.password;
       const originalIsActive = user.isActive;
-      
+
       user.email = 'UPPERCASE@EXAMPLE.COM';
       user.checkFieldsBeforeChanges();
-      
+
       expect(user.id).toBe(originalId);
       expect(user.fullName).toBe(originalFullName);
       expect(user.age).toBe(originalAge);
@@ -281,7 +283,7 @@ describe('User Entity', () => {
       user.email = '  FIRST@EXAMPLE.COM  ';
       user.checkFieldsBeforeChanges();
       expect(user.email).toBe('first@example.com');
-      
+
       user.email = '  SECOND@EXAMPLE.COM  ';
       user.checkFieldsBeforeChanges();
       expect(user.email).toBe('second@example.com');

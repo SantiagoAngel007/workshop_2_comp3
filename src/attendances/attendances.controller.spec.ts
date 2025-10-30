@@ -64,7 +64,9 @@ describe('AttendancesController', () => {
       const result = await controller.checkOutByReceptionist(checkOutDto);
 
       expect(result).toEqual(expectedResult);
-      expect(attendancesService.checkOut).toHaveBeenCalledWith(checkOutDto.userId);
+      expect(attendancesService.checkOut).toHaveBeenCalledWith(
+        checkOutDto.userId,
+      );
     });
   });
 
@@ -73,12 +75,16 @@ describe('AttendancesController', () => {
       const userId = 'user-123';
       const expectedResult = { gym: 25, classes: 5 };
 
-      mockAttendancesService.getUserAttendanceStatus.mockResolvedValue(expectedResult);
+      mockAttendancesService.getUserAttendanceStatus.mockResolvedValue(
+        expectedResult,
+      );
 
       const result = await controller.getStatus(userId);
 
       expect(result).toEqual(expectedResult);
-      expect(attendancesService.getUserAttendanceStatus).toHaveBeenCalledWith(userId);
+      expect(attendancesService.getUserAttendanceStatus).toHaveBeenCalledWith(
+        userId,
+      );
     });
   });
 
@@ -91,12 +97,20 @@ describe('AttendancesController', () => {
       };
       const expectedResult = [mockAttendance];
 
-      mockAttendancesService.getUserAttendanceHistory.mockResolvedValue(expectedResult);
+      mockAttendancesService.getUserAttendanceHistory.mockResolvedValue(
+        expectedResult,
+      );
 
-      const result = await controller.getHistory(getHistoryDto.userId, getHistoryDto);
+      const result = await controller.getHistory(
+        getHistoryDto.userId,
+        getHistoryDto,
+      );
 
       expect(result).toEqual(expectedResult);
-      expect(attendancesService.getUserAttendanceHistory).toHaveBeenCalledWith(getHistoryDto.userId, getHistoryDto);
+      expect(attendancesService.getUserAttendanceHistory).toHaveBeenCalledWith(
+        getHistoryDto.userId,
+        getHistoryDto,
+      );
     });
   });
 
@@ -109,12 +123,16 @@ describe('AttendancesController', () => {
         thisWeek: 2,
       };
 
-      mockAttendancesService.getUserAttendanceStats.mockResolvedValue(expectedResult);
+      mockAttendancesService.getUserAttendanceStats.mockResolvedValue(
+        expectedResult,
+      );
 
       const result = await controller.getStats(userId);
 
       expect(result).toEqual(expectedResult);
-      expect(attendancesService.getUserAttendanceStats).toHaveBeenCalledWith(userId);
+      expect(attendancesService.getUserAttendanceStats).toHaveBeenCalledWith(
+        userId,
+      );
     });
   });
 
@@ -122,10 +140,12 @@ describe('AttendancesController', () => {
     it('should return all active attendance records', async () => {
       const expectedResult = [
         { ...mockAttendance, isActive: true },
-        { ...mockAttendance, id: 'attendance-2', isActive: true }
+        { ...mockAttendance, id: 'attendance-2', isActive: true },
       ];
 
-      mockAttendancesService.getActiveAttendances.mockResolvedValue(expectedResult);
+      mockAttendancesService.getActiveAttendances.mockResolvedValue(
+        expectedResult,
+      );
 
       const result = await controller.getAllActive();
 

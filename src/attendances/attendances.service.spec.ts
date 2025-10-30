@@ -5,8 +5,17 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Attendance, AttendanceType } from './entities/attendance.entity';
 import { User } from '../auth/entities/users.entity';
 import { Subscription } from '../subscriptions/entities/subscription.entity';
-import { createMockRepository, mockUser, mockSubscription, mockMembership } from '../../test/utils/test-utils';
-import { NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
+import {
+  createMockRepository,
+  mockUser,
+  mockSubscription,
+  mockMembership,
+} from '../../test/utils/test-utils';
+import {
+  NotFoundException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Between, MoreThanOrEqual } from 'typeorm';
 
 describe('AttendancesService', () => {
@@ -15,7 +24,7 @@ describe('AttendancesService', () => {
   let userRepository: any;
   let subscriptionRepository: any;
 
-      const mockAttendance = {
+  const mockAttendance = {
     id: 'attendance-123',
     user: mockUser,
     type: AttendanceType.GYM,
@@ -25,7 +34,8 @@ describe('AttendancesService', () => {
     dateKey: '2025-10-27',
     created_at: new Date('2025-10-27T10:00:00.000Z'),
     updated_at: new Date('2025-10-27T10:00:00.000Z'),
-  };  beforeEach(async () => {
+  };
+  beforeEach(async () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2025-10-27T10:00:00.000Z'));
     const module: TestingModule = await Test.createTestingModule({
@@ -77,7 +87,7 @@ describe('AttendancesService', () => {
       const userId = 'user-123';
       const baseDate = new Date('2025-10-27T10:00:00.000Z');
       const error = new Error('Database error');
-      
+
       // Make the subscription query fail
       subscriptionRepository.findOne.mockRejectedValue(error);
       userRepository.findOneBy.mockResolvedValue(mockUser);
@@ -92,8 +102,9 @@ describe('AttendancesService', () => {
       };
 
       // The check-in should fail since there are no available passes due to the error
-      await expect(service.checkIn(createAttendanceDto))
-        .rejects.toThrow(ForbiddenException);
+      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(
+        ForbiddenException,
+      );
 
       // Verify that the subscription repository was queried
       expect(subscriptionRepository.findOne).toHaveBeenCalled();
@@ -109,8 +120,11 @@ describe('AttendancesService', () => {
         ],
       };
 
-      subscriptionRepository.findOne.mockResolvedValue(multiMembershipSubscription);
-      attendanceRepository.count.mockResolvedValueOnce(0) // gym attendances
+      subscriptionRepository.findOne.mockResolvedValue(
+        multiMembershipSubscription,
+      );
+      attendanceRepository.count
+        .mockResolvedValueOnce(0) // gym attendances
         .mockResolvedValueOnce(0); // class attendances
 
       const result = await service.getUserAttendanceStatus(userId);
@@ -127,7 +141,8 @@ describe('AttendancesService', () => {
       };
 
       subscriptionRepository.findOne.mockResolvedValue(subscription);
-      attendanceRepository.count.mockResolvedValueOnce(3) // 3 gym attendances used
+      attendanceRepository.count
+        .mockResolvedValueOnce(3) // 3 gym attendances used
         .mockResolvedValueOnce(2); // 2 class attendances used
 
       const result = await service.getUserAttendanceStatus(userId);
@@ -150,7 +165,8 @@ describe('AttendancesService', () => {
       };
 
       userRepository.findOneBy.mockResolvedValue(mockUser);
-      attendanceRepository.count.mockResolvedValueOnce(0) // Not currently inside
+      attendanceRepository.count
+        .mockResolvedValueOnce(0) // Not currently inside
         .mockResolvedValueOnce(0); // No gym attendances this month
       subscriptionRepository.findOne.mockResolvedValue(mockSubscription); // Has a valid subscription
       attendanceRepository.create.mockReturnValue(mockAttendance);
@@ -173,11 +189,13 @@ describe('AttendancesService', () => {
       // Create subscription with available class passes
       const subscriptionWithClassPasses = {
         ...mockSubscription,
-        memberships: [{
-          ...mockMembership,
-          max_classes_assistance: 10,  // Ensure enough class passes
-          max_gym_assistance: 30
-        }]
+        memberships: [
+          {
+            ...mockMembership,
+            max_classes_assistance: 10, // Ensure enough class passes
+            max_gym_assistance: 30,
+          },
+        ],
       };
 
       userRepository.findOneBy.mockResolvedValue(mockUser);
@@ -185,7 +203,9 @@ describe('AttendancesService', () => {
         .mockResolvedValueOnce(0) // Not currently inside
         .mockResolvedValueOnce(0) // No class attendances this month (for validateUserCanEnter)
         .mockResolvedValueOnce(0); // No class attendances this month (for calculateAvailableAttendances)
-      subscriptionRepository.findOne.mockResolvedValue(subscriptionWithClassPasses);
+      subscriptionRepository.findOne.mockResolvedValue(
+        subscriptionWithClassPasses,
+      );
       attendanceRepository.create.mockReturnValue(classAttendance);
       attendanceRepository.save.mockResolvedValue(classAttendance);
 
@@ -194,7 +214,7 @@ describe('AttendancesService', () => {
       expect(result).toEqual(classAttendance);
       expect(subscriptionRepository.findOne).toHaveBeenCalledWith({
         where: { user: { id: 'user-123' }, isActive: true },
-        relations: ['memberships']
+        relations: ['memberships'],
       });
     });
 
@@ -236,13 +256,20 @@ describe('AttendancesService', () => {
         entranceDatetime: baseDate.toISOString(),
         dateKey: baseDateKey,
       };
-      const subscriptionWithNoPasses = { ...mockSubscription, memberships: [{ ...mockMembership, max_gym_assistance: 0 }] };
+      const subscriptionWithNoPasses = {
+        ...mockSubscription,
+        memberships: [{ ...mockMembership, max_gym_assistance: 0 }],
+      };
 
       userRepository.findOneBy.mockResolvedValue(mockUser);
       attendanceRepository.count.mockResolvedValue(0); // Not currently inside
-      subscriptionRepository.findOne.mockResolvedValue(subscriptionWithNoPasses);
+      subscriptionRepository.findOne.mockResolvedValue(
+        subscriptionWithNoPasses,
+      );
 
-      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(ForbiddenException);
+      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should throw ForbiddenException if user has no available class passes', async () => {
@@ -252,13 +279,20 @@ describe('AttendancesService', () => {
         entranceDatetime: baseDate.toISOString(),
         dateKey: baseDateKey,
       };
-      const subscriptionWithNoPasses = { ...mockSubscription, memberships: [{ ...mockMembership, max_classes_assistance: 0 }] };
+      const subscriptionWithNoPasses = {
+        ...mockSubscription,
+        memberships: [{ ...mockMembership, max_classes_assistance: 0 }],
+      };
 
       userRepository.findOneBy.mockResolvedValue(mockUser);
       attendanceRepository.count.mockResolvedValue(0); // Not currently inside
-      subscriptionRepository.findOne.mockResolvedValue(subscriptionWithNoPasses);
+      subscriptionRepository.findOne.mockResolvedValue(
+        subscriptionWithNoPasses,
+      );
 
-      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(ForbiddenException);
+      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should throw ForbiddenException if user has no active subscription', async () => {
@@ -273,7 +307,9 @@ describe('AttendancesService', () => {
       attendanceRepository.count.mockResolvedValue(0); // Not currently inside
       subscriptionRepository.findOne.mockResolvedValue(null); // No active subscription
 
-      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(ForbiddenException);
+      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should throw ForbiddenException if user has active subscription but no memberships', async () => {
@@ -283,13 +319,20 @@ describe('AttendancesService', () => {
         entranceDatetime: baseDate.toISOString(),
         dateKey: baseDateKey,
       };
-      const subscriptionWithoutMemberships = { ...mockSubscription, memberships: [] };
+      const subscriptionWithoutMemberships = {
+        ...mockSubscription,
+        memberships: [],
+      };
 
       userRepository.findOneBy.mockResolvedValue(mockUser);
       attendanceRepository.count.mockResolvedValue(0); // Not currently inside
-      subscriptionRepository.findOne.mockResolvedValue(subscriptionWithoutMemberships);
+      subscriptionRepository.findOne.mockResolvedValue(
+        subscriptionWithoutMemberships,
+      );
 
-      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(ForbiddenException);
+      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should allow check-in when user has exactly enough passes left', async () => {
@@ -301,14 +344,17 @@ describe('AttendancesService', () => {
       };
       const subscriptionWithExactPasses = {
         ...mockSubscription,
-        memberships: [{ ...mockMembership, max_gym_assistance: 1 }]
+        memberships: [{ ...mockMembership, max_gym_assistance: 1 }],
       };
       const gymAttendance = { ...mockAttendance, type: AttendanceType.GYM };
 
       userRepository.findOneBy.mockResolvedValue(mockUser);
-      attendanceRepository.count.mockResolvedValueOnce(0) // Not currently inside
+      attendanceRepository.count
+        .mockResolvedValueOnce(0) // Not currently inside
         .mockResolvedValueOnce(0); // No gym attendances used
-      subscriptionRepository.findOne.mockResolvedValue(subscriptionWithExactPasses);
+      subscriptionRepository.findOne.mockResolvedValue(
+        subscriptionWithExactPasses,
+      );
       attendanceRepository.create.mockReturnValue(gymAttendance);
       attendanceRepository.save.mockResolvedValue(gymAttendance);
 
@@ -328,25 +374,30 @@ describe('AttendancesService', () => {
         ...mockSubscription,
         memberships: [
           { ...mockMembership, max_gym_assistance: 0 },
-          { ...mockMembership, max_gym_assistance: 0 }
-        ]
+          { ...mockMembership, max_gym_assistance: 0 },
+        ],
       };
 
       userRepository.findOneBy.mockResolvedValue(mockUser);
       attendanceRepository.count.mockResolvedValue(0); // Not currently inside
-      subscriptionRepository.findOne.mockResolvedValue(subscriptionWithMultipleZeroPasses);
+      subscriptionRepository.findOne.mockResolvedValue(
+        subscriptionWithMultipleZeroPasses,
+      );
 
-      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(ForbiddenException);
+      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
-
-
-
 
   describe('checkOut', () => {
     it('should check out user successfully', async () => {
       const userId = 'user-123';
-      const checkedOutAttendance = { ...mockAttendance, checkOut: new Date('2025-10-27T10:00:00.000Z'), isActive: false };
+      const checkedOutAttendance = {
+        ...mockAttendance,
+        checkOut: new Date('2025-10-27T10:00:00.000Z'),
+        isActive: false,
+      };
 
       userRepository.findOneBy.mockResolvedValue(mockUser);
       attendanceRepository.findOne.mockResolvedValue(mockAttendance);
@@ -377,7 +428,9 @@ describe('AttendancesService', () => {
       };
       userRepository.findOneBy.mockResolvedValue(null);
 
-      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(NotFoundException);
+      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw NotFoundException if user not found during check-out', async () => {
@@ -428,9 +481,14 @@ describe('AttendancesService', () => {
 
     it('should return zero available attendances when user has no memberships', async () => {
       const userId = 'user-123';
-      const subscriptionWithoutMemberships = { ...mockSubscription, memberships: [] };
+      const subscriptionWithoutMemberships = {
+        ...mockSubscription,
+        memberships: [],
+      };
       attendanceRepository.findOne.mockResolvedValue(null);
-      subscriptionRepository.findOne.mockResolvedValue(subscriptionWithoutMemberships);
+      subscriptionRepository.findOne.mockResolvedValue(
+        subscriptionWithoutMemberships,
+      );
 
       const result = await service.getUserAttendanceStatus(userId);
 
@@ -440,21 +498,29 @@ describe('AttendancesService', () => {
 
     it('should calculate available attendances correctly considering used passes', async () => {
       const userId = 'user-123';
-      const subscriptionWithLimitedPasses = { 
-        ...mockSubscription, 
-        memberships: [{ ...mockMembership, max_gym_assistance: 10, max_classes_assistance: 5 }] 
+      const subscriptionWithLimitedPasses = {
+        ...mockSubscription,
+        memberships: [
+          {
+            ...mockMembership,
+            max_gym_assistance: 10,
+            max_classes_assistance: 5,
+          },
+        ],
       };
-      
+
       attendanceRepository.findOne.mockResolvedValue(null);
-      subscriptionRepository.findOne.mockResolvedValue(subscriptionWithLimitedPasses);
+      subscriptionRepository.findOne.mockResolvedValue(
+        subscriptionWithLimitedPasses,
+      );
       attendanceRepository.count
-        .mockResolvedValueOnce(3)  // 3 gym attendances used
+        .mockResolvedValueOnce(3) // 3 gym attendances used
         .mockResolvedValueOnce(2); // 2 class attendances used
 
       const result = await service.getUserAttendanceStatus(userId);
 
-      expect(result.availableAttendances.gym).toBe(7);  // 10 - 3
-      expect(result.availableAttendances.classes).toBe(3);  // 5 - 2
+      expect(result.availableAttendances.gym).toBe(7); // 10 - 3
+      expect(result.availableAttendances.classes).toBe(3); // 5 - 2
     });
   });
 
@@ -478,7 +544,9 @@ describe('AttendancesService', () => {
       userRepository.findOneBy.mockResolvedValue(mockUser);
       attendanceRepository.find.mockResolvedValue(attendances);
 
-      const result = await service.getUserAttendanceHistory(userId, { type: AttendanceType.GYM });
+      const result = await service.getUserAttendanceHistory(userId, {
+        type: AttendanceType.GYM,
+      });
       expect(result).toEqual(attendances);
       expect(attendanceRepository.find).toHaveBeenCalledWith({
         where: { user: { id: userId }, type: AttendanceType.GYM },
@@ -492,12 +560,18 @@ describe('AttendancesService', () => {
       const from = '2025-10-01';
       const to = '2025-10-31';
 
-      const result = await service.getUserAttendanceHistory(userId, { from, to });
+      const result = await service.getUserAttendanceHistory(userId, {
+        from,
+        to,
+      });
       expect(result).toEqual(attendances);
       expect(attendanceRepository.find).toHaveBeenCalledWith({
         where: {
           user: { id: userId },
-          entranceDatetime: Between(new Date(from), new Date(to + 'T23:59:59.999Z')),
+          entranceDatetime: Between(
+            new Date(from),
+            new Date(to + 'T23:59:59.999Z'),
+          ),
         },
         order: { entranceDatetime: 'DESC' },
       });
@@ -521,7 +595,9 @@ describe('AttendancesService', () => {
 
     it('should throw NotFoundException if user not found', async () => {
       userRepository.findOneBy.mockResolvedValue(null);
-      await expect(service.getUserAttendanceHistory('invalid-user', {})).rejects.toThrow(NotFoundException);
+      await expect(
+        service.getUserAttendanceHistory('invalid-user', {}),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -547,9 +623,21 @@ describe('AttendancesService', () => {
     it('should return attendance stats for a user with mixed attendance types', async () => {
       userRepository.findOneBy.mockResolvedValue(mockUser);
       attendanceRepository.find.mockResolvedValue([
-        { ...mockAttendance, type: AttendanceType.GYM, entranceDatetime: baseDate },
-        { ...mockAttendance, type: AttendanceType.CLASS, entranceDatetime: new Date(baseDate.getTime() + 86400000) }, // Next day
-        { ...mockAttendance, type: AttendanceType.GYM, entranceDatetime: new Date(baseDate.getTime() + 172800000) }, // Two days later
+        {
+          ...mockAttendance,
+          type: AttendanceType.GYM,
+          entranceDatetime: baseDate,
+        },
+        {
+          ...mockAttendance,
+          type: AttendanceType.CLASS,
+          entranceDatetime: new Date(baseDate.getTime() + 86400000),
+        }, // Next day
+        {
+          ...mockAttendance,
+          type: AttendanceType.GYM,
+          entranceDatetime: new Date(baseDate.getTime() + 172800000),
+        }, // Two days later
       ]);
 
       const result = await service.getUserAttendanceStats(userId);
@@ -568,9 +656,21 @@ describe('AttendancesService', () => {
     it('should return stats with multiple months', async () => {
       userRepository.findOneBy.mockResolvedValue(mockUser);
       attendanceRepository.find.mockResolvedValue([
-        { ...mockAttendance, type: AttendanceType.GYM, entranceDatetime: new Date('2025-10-27T10:00:00.000Z') },
-        { ...mockAttendance, type: AttendanceType.CLASS, entranceDatetime: new Date('2025-11-15T10:00:00.000Z') },
-        { ...mockAttendance, type: AttendanceType.GYM, entranceDatetime: new Date('2025-11-27T10:00:00.000Z') },
+        {
+          ...mockAttendance,
+          type: AttendanceType.GYM,
+          entranceDatetime: new Date('2025-10-27T10:00:00.000Z'),
+        },
+        {
+          ...mockAttendance,
+          type: AttendanceType.CLASS,
+          entranceDatetime: new Date('2025-11-15T10:00:00.000Z'),
+        },
+        {
+          ...mockAttendance,
+          type: AttendanceType.GYM,
+          entranceDatetime: new Date('2025-11-27T10:00:00.000Z'),
+        },
       ]);
 
       const result = await service.getUserAttendanceStats(userId);
@@ -598,29 +698,31 @@ describe('AttendancesService', () => {
 
     it('should handle attendance across year boundary', async () => {
       userRepository.findOneBy.mockResolvedValue(mockUser);
-      const decemberAttendance = { 
-        ...mockAttendance, 
-        type: AttendanceType.GYM, 
+      const decemberAttendance = {
+        ...mockAttendance,
+        type: AttendanceType.GYM,
         entranceDatetime: new Date('2025-12-31T23:59:59.999Z'),
-        dateKey: '2025-12-31'
+        dateKey: '2025-12-31',
       };
-      const januaryAttendance = { 
-        ...mockAttendance, 
-        type: AttendanceType.CLASS, 
+      const januaryAttendance = {
+        ...mockAttendance,
+        type: AttendanceType.CLASS,
         entranceDatetime: new Date('2026-01-01T00:00:00.000Z'),
-        dateKey: '2026-01-01'
+        dateKey: '2026-01-01',
       };
-      
+
       attendanceRepository.find.mockResolvedValue([
         decemberAttendance,
-        januaryAttendance
+        januaryAttendance,
       ]);
 
       const result = await service.getUserAttendanceStats(userId);
 
       expect(result.totalGymAttendances).toBe(1);
       expect(result.totalClassAttendances).toBe(1);
-      expect(result.monthlyStats.sort((a, b) => a.month.localeCompare(b.month))).toEqual([
+      expect(
+        result.monthlyStats.sort((a, b) => a.month.localeCompare(b.month)),
+      ).toEqual([
         { month: '2025-12', gymCount: 1, classCount: 0 },
         { month: '2026-01', gymCount: 0, classCount: 1 },
       ]);
@@ -630,27 +732,29 @@ describe('AttendancesService', () => {
       userRepository.findOneBy.mockResolvedValue(mockUser);
       const octoberAttendance = {
         ...mockAttendance,
-        type: AttendanceType.GYM, 
+        type: AttendanceType.GYM,
         entranceDatetime: new Date('2025-10-31T23:59:59.999Z'),
-        dateKey: '2025-10-31'
+        dateKey: '2025-10-31',
       };
       const novemberAttendance = {
         ...mockAttendance,
-        type: AttendanceType.CLASS, 
+        type: AttendanceType.CLASS,
         entranceDatetime: new Date('2025-11-01T00:00:00.000Z'),
-        dateKey: '2025-11-01'
+        dateKey: '2025-11-01',
       };
-      
+
       attendanceRepository.find.mockResolvedValue([
         octoberAttendance,
-        novemberAttendance
+        novemberAttendance,
       ]);
 
       const result = await service.getUserAttendanceStats(userId);
 
       expect(result.totalGymAttendances).toBe(1);
       expect(result.totalClassAttendances).toBe(1);
-      expect(result.monthlyStats.sort((a, b) => a.month.localeCompare(b.month))).toEqual([
+      expect(
+        result.monthlyStats.sort((a, b) => a.month.localeCompare(b.month)),
+      ).toEqual([
         { month: '2025-10', gymCount: 1, classCount: 0 },
         { month: '2025-11', gymCount: 0, classCount: 1 },
       ]);
@@ -658,17 +762,17 @@ describe('AttendancesService', () => {
 
     it('should throw NotFoundException if user not found', async () => {
       userRepository.findOneBy.mockResolvedValue(null);
-      await expect(service.getUserAttendanceStats('invalid-user')).rejects.toThrow(NotFoundException);
+      await expect(
+        service.getUserAttendanceStats('invalid-user'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
-
-
 
   describe('getActiveAttendances', () => {
     it('should return all active attendances', async () => {
       const activeAttendances = [
         { ...mockAttendance, isActive: true },
-        { ...mockAttendance, id: 'attendance-456', isActive: true }
+        { ...mockAttendance, id: 'attendance-456', isActive: true },
       ];
 
       attendanceRepository.find.mockResolvedValue(activeAttendances);
@@ -679,7 +783,7 @@ describe('AttendancesService', () => {
       expect(attendanceRepository.find).toHaveBeenCalledWith({
         where: { isActive: true },
         relations: ['user'],
-        order: { entranceDatetime: 'DESC' }
+        order: { entranceDatetime: 'DESC' },
       });
     });
   });
@@ -692,17 +796,19 @@ describe('AttendancesService', () => {
         entranceDatetime: new Date('2025-10-27T10:00:00.000Z').toISOString(),
         dateKey: '2025-10-27',
       };
-      
+
       userRepository.findOneBy.mockResolvedValue(mockUser);
       subscriptionRepository.findOne.mockResolvedValue(null);
 
       // The service will actually check for passes first, so we expect ForbiddenException
-      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(ForbiddenException);
+      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should handle checkOut when user has no active attendance', async () => {
       const userId = 'user-123';
-      
+
       userRepository.findOneBy.mockResolvedValue(mockUser);
       attendanceRepository.findOne.mockResolvedValue(null);
 
@@ -717,61 +823,71 @@ describe('AttendancesService', () => {
         entranceDatetime: new Date('2025-10-27T10:00:00.000Z').toISOString(),
         dateKey: '2025-10-27',
       };
-      
+
       userRepository.findOneBy.mockResolvedValue(mockUser);
       attendanceRepository.count.mockResolvedValue(1); // User is already inside
 
-      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(ConflictException);
+      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should throw NotFoundException when user does not exist for getUserAttendanceHistory', async () => {
       const userId = 'invalid-user';
       const queryParams = {};
-      
+
       userRepository.findOneBy.mockResolvedValue(null);
 
-      await expect(service.getUserAttendanceHistory(userId, queryParams)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.getUserAttendanceHistory(userId, queryParams),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should handle getUserAttendanceHistory with date range', async () => {
       const userId = 'user-123';
-      const queryParams = { 
+      const queryParams = {
         from: '2025-10-01',
         to: '2025-10-31',
-        type: AttendanceType.CLASS
+        type: AttendanceType.CLASS,
       };
-      
+
       userRepository.findOneBy.mockResolvedValue(mockUser);
       attendanceRepository.find.mockResolvedValue([]);
 
-      const result = await service.getUserAttendanceHistory(userId, queryParams);
-      
+      const result = await service.getUserAttendanceHistory(
+        userId,
+        queryParams,
+      );
+
       expect(result).toEqual([]);
     });
 
     it('should handle getUserAttendanceHistory with only from date', async () => {
       const userId = 'user-123';
       const queryParams = { from: '2025-10-01' };
-      
+
       userRepository.findOneBy.mockResolvedValue(mockUser);
       attendanceRepository.find.mockResolvedValue([mockAttendance]);
 
-      const result = await service.getUserAttendanceHistory(userId, queryParams);
-      
+      const result = await service.getUserAttendanceHistory(
+        userId,
+        queryParams,
+      );
+
       expect(result).toEqual([mockAttendance]);
     });
 
     it('should handle subscription with empty memberships array', async () => {
       const userId = 'user-123';
-      
+
       attendanceRepository.findOne.mockResolvedValue(null);
       subscriptionRepository.findOne.mockResolvedValue({
         ...mockSubscription,
-        memberships: []
+        memberships: [],
       });
 
       const result = await service.getUserAttendanceStatus(userId);
-      
+
       expect(result.isInside).toBe(false);
       expect(result.availableAttendances).toEqual({ gym: 0, classes: 0 });
     });

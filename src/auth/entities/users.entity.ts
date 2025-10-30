@@ -7,49 +7,49 @@ import {
   JoinTable,
   PrimaryGeneratedColumn,
   OneToMany,
-} from "typeorm";
-import { Role } from "./roles.entity"; 
+} from 'typeorm';
+import { Role } from './roles.entity';
 
 @Entity()
 export class User {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @Column({
-        type: 'text',
-        unique: true
-    })
-    email: string;
+  @Column({
+    type: 'text',
+    unique: true,
+  })
+  email: string;
 
-    @Column('text')
-    fullName: string;
+  @Column('text')
+  fullName: string;
 
-    @Column('int')
-    age: number;
+  @Column('int')
+  age: number;
 
-    @Column('text')
-    password?: string;
+  @Column('text')
+  password?: string;
 
-    @Column('bool', { default: true })
-    isActive: boolean;
+  @Column('bool', { default: true })
+  isActive: boolean;
 
-    @OneToMany('Subscription', 'user', { eager: false })
-    subscriptions: any[];
-    
-    @OneToMany('Attendance', 'user', { eager: false })
-    attendances: any[];
-    
-    @ManyToMany(() => Role, { eager: false })
-    @JoinTable({
-        name: 'user_roles',
-        joinColumn: { name: 'userId', referencedColumnName: 'id' },
-        inverseJoinColumn: { name: 'roleId', referencedColumnName: 'id' }
-    })
-    roles: Role[];
+  @OneToMany('Subscription', 'user', { eager: false })
+  subscriptions: any[];
 
-    @BeforeInsert()
-    @BeforeUpdate()
-    checkFieldsBeforeChanges() {
-        this.email = this.email.toLowerCase().trim();
-    }
+  @OneToMany('Attendance', 'user', { eager: false })
+  attendances: any[];
+
+  @ManyToMany(() => Role, { eager: false })
+  @JoinTable({
+    name: 'user_roles',
+    joinColumn: { name: 'userId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'roleId', referencedColumnName: 'id' },
+  })
+  roles: Role[];
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  checkFieldsBeforeChanges() {
+    this.email = this.email.toLowerCase().trim();
+  }
 }

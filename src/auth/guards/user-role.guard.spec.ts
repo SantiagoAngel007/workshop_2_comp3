@@ -1,13 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserRoleGuard } from './user-role.guard';
 import { Reflector } from '@nestjs/core';
-import { ExecutionContext, BadRequestException, ForbiddenException } from '@nestjs/common';
-import { META_DATA } from '../decorators/role-protected/role-protected.decorator';
+import {
+  ExecutionContext,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
+// import { META_DATA } from '../decorators/role-protected/role-protected.decorator';
 import { ValidRoles } from '../enums/roles.enum';
 import { User } from '../entities/users.entity';
 import { HttpArgumentsHost } from '@nestjs/common/interfaces';
 
-const createMockExecutionContext = (user?: any): ExecutionContext & { switchToHttp: () => HttpArgumentsHost } => ({
+const createMockExecutionContext = (
+  user?: any,
+): ExecutionContext & { switchToHttp: () => HttpArgumentsHost } => ({
   getHandler: jest.fn(),
   getClass: jest.fn(),
   getType: jest.fn(),
@@ -49,7 +55,7 @@ describe('UserRoleGuard', () => {
 
   it('should allow access when no roles are specified', () => {
     const mockContext = createMockExecutionContext({
-      roles: [{ name: ValidRoles.client }]
+      roles: [{ name: ValidRoles.client }],
     });
 
     jest.spyOn(reflector, 'get').mockReturnValue(undefined);
@@ -60,7 +66,7 @@ describe('UserRoleGuard', () => {
 
   it('should allow access when empty roles array is specified', () => {
     const mockContext = createMockExecutionContext({
-      roles: [{ name: ValidRoles.client }]
+      roles: [{ name: ValidRoles.client }],
     });
 
     jest.spyOn(reflector, 'get').mockReturnValue([]);
@@ -75,7 +81,9 @@ describe('UserRoleGuard', () => {
     jest.spyOn(reflector, 'get').mockReturnValue([ValidRoles.admin]);
 
     expect(() => guard.canActivate(mockContext)).toThrow(BadRequestException);
-    expect(() => guard.canActivate(mockContext)).toThrow('User or roles not found');
+    expect(() => guard.canActivate(mockContext)).toThrow(
+      'User or roles not found',
+    );
   });
 
   it('should throw BadRequestException when user has no roles', () => {
@@ -87,7 +95,9 @@ describe('UserRoleGuard', () => {
     jest.spyOn(reflector, 'get').mockReturnValue([ValidRoles.admin]);
 
     expect(() => guard.canActivate(mockContext)).toThrow(BadRequestException);
-    expect(() => guard.canActivate(mockContext)).toThrow('User or roles not found');
+    expect(() => guard.canActivate(mockContext)).toThrow(
+      'User or roles not found',
+    );
   });
 
   it('should allow access when user has valid role', () => {
@@ -115,7 +125,9 @@ describe('UserRoleGuard', () => {
     jest.spyOn(reflector, 'get').mockReturnValue([ValidRoles.admin]);
 
     expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
-    expect(() => guard.canActivate(mockContext)).toThrow(`User ${mockUser.email} needs a valid role`);
+    expect(() => guard.canActivate(mockContext)).toThrow(
+      `User ${mockUser.email} needs a valid role`,
+    );
   });
 
   it('should handle multiple valid roles', () => {
@@ -126,7 +138,9 @@ describe('UserRoleGuard', () => {
 
     const mockContext = createMockExecutionContext(mockUser);
 
-    jest.spyOn(reflector, 'get').mockReturnValue([ValidRoles.admin, ValidRoles.client]);
+    jest
+      .spyOn(reflector, 'get')
+      .mockReturnValue([ValidRoles.admin, ValidRoles.client]);
 
     const result = guard.canActivate(mockContext);
     expect(result).toBe(true);
@@ -135,10 +149,7 @@ describe('UserRoleGuard', () => {
   it('should handle user with multiple roles', () => {
     const mockUser = {
       email: 'user@example.com',
-      roles: [
-        { name: ValidRoles.client },
-        { name: ValidRoles.admin }
-      ],
+      roles: [{ name: ValidRoles.client }, { name: ValidRoles.admin }],
     } as User;
 
     const mockContext = createMockExecutionContext(mockUser);

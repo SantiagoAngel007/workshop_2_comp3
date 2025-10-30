@@ -4,7 +4,7 @@ describe('Subscription Entity', () => {
   let subscription: Subscription;
   const mockUser = {
     id: 'user-123',
-    email: 'test@example.com'
+    email: 'test@example.com',
   };
 
   beforeEach(() => {
@@ -40,7 +40,7 @@ describe('Subscription Entity', () => {
   it('should handle activation status changes', () => {
     subscription.isActive = false;
     expect(subscription.isActive).toBe(false);
-    
+
     subscription.isActive = true;
     expect(subscription.isActive).toBe(true);
   });
@@ -48,7 +48,7 @@ describe('Subscription Entity', () => {
   it('should handle cost updates', () => {
     subscription.cost = 299.99;
     expect(subscription.cost).toBe(299.99);
-    
+
     subscription.cost = 0;
     expect(subscription.cost).toBe(0);
   });
@@ -73,10 +73,10 @@ describe('Subscription Entity', () => {
     expect(subscription.user).toBeDefined();
     expect(subscription.user.id).toBe('user-123');
     expect(subscription.user.email).toBe('test@example.com');
-    
+
     const newUser = {
       id: 'user-456',
-      email: 'new@example.com'
+      email: 'new@example.com',
     };
     subscription.user = newUser;
     expect(subscription.user.id).toBe('user-456');
@@ -85,7 +85,7 @@ describe('Subscription Entity', () => {
   it('should handle memberships relationship', () => {
     const mockMemberships = [
       { id: 'membership-1', name: 'Basic' },
-      { id: 'membership-2', name: 'Premium' }
+      { id: 'membership-2', name: 'Premium' },
     ];
 
     subscription.memberships = mockMemberships;
@@ -151,7 +151,7 @@ describe('Subscription Entity', () => {
       purchase_date: testDate,
       isActive: true,
       user: mockUser,
-      memberships: []
+      memberships: [],
     });
   });
 
@@ -174,7 +174,7 @@ describe('Subscription Entity', () => {
     it('should handle zero assistance limits', () => {
       subscription.max_gym_assistance = 0;
       subscription.max_classes_assistance = 0;
-      
+
       expect(subscription.max_gym_assistance).toBe(0);
       expect(subscription.max_classes_assistance).toBe(0);
     });
@@ -182,7 +182,7 @@ describe('Subscription Entity', () => {
     it('should handle very high assistance limits', () => {
       subscription.max_gym_assistance = 999;
       subscription.max_classes_assistance = 999;
-      
+
       expect(subscription.max_gym_assistance).toBe(999);
       expect(subscription.max_classes_assistance).toBe(999);
     });
@@ -202,7 +202,7 @@ describe('Subscription Entity', () => {
     it('should handle removing memberships', () => {
       subscription.memberships = [{ id: 'mem1' }, { id: 'mem2' }];
       expect(subscription.memberships.length).toBe(2);
-      
+
       subscription.memberships = [];
       expect(subscription.memberships.length).toBe(0);
     });
@@ -210,10 +210,10 @@ describe('Subscription Entity', () => {
     it('should handle property updates multiple times', () => {
       subscription.isActive = true;
       expect(subscription.isActive).toBe(true);
-      
+
       subscription.isActive = false;
       expect(subscription.isActive).toBe(false);
-      
+
       subscription.isActive = true;
       expect(subscription.isActive).toBe(true);
     });
@@ -238,10 +238,10 @@ describe('Subscription Entity', () => {
     it('should handle user changes', () => {
       const user1 = { id: 'user-1', email: 'user1@test.com' };
       const user2 = { id: 'user-2', email: 'user2@test.com' };
-      
+
       subscription.user = user1;
       expect(subscription.user.id).toBe('user-1');
-      
+
       subscription.user = user2;
       expect(subscription.user.id).toBe('user-2');
     });
@@ -249,14 +249,16 @@ describe('Subscription Entity', () => {
     it('should handle adding and removing memberships', () => {
       subscription.memberships = [];
       expect(subscription.memberships).toHaveLength(0);
-      
+
       subscription.memberships.push({ id: 'mem1' });
       expect(subscription.memberships).toHaveLength(1);
-      
+
       subscription.memberships.push({ id: 'mem2' });
       expect(subscription.memberships).toHaveLength(2);
-      
-      subscription.memberships = subscription.memberships.filter(m => m.id !== 'mem1');
+
+      subscription.memberships = subscription.memberships.filter(
+        (m) => m.id !== 'mem1',
+      );
       expect(subscription.memberships).toHaveLength(1);
       expect(subscription.memberships[0].id).toBe('mem2');
     });

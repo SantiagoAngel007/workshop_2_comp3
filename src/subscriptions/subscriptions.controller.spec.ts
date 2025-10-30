@@ -165,14 +165,20 @@ describe('SubscriptionsController', () => {
   describe('deactivate', () => {
     it('should deactivate subscription', async () => {
       const id = 'sub-123';
-      const expectedResult = { message: 'Subscription deactivated successfully' };
+      const expectedResult = {
+        message: 'Subscription deactivated successfully',
+      };
 
-      mockSubscriptionsService.deactivateSubscription.mockResolvedValue(expectedResult);
+      mockSubscriptionsService.deactivateSubscription.mockResolvedValue(
+        expectedResult,
+      );
 
       const result = await controller.deactivate(id);
 
       expect(result).toEqual(expectedResult);
-      expect(subscriptionsService.deactivateSubscription).toHaveBeenCalledWith(id);
+      expect(subscriptionsService.deactivateSubscription).toHaveBeenCalledWith(
+        id,
+      );
     });
   });
 
@@ -181,12 +187,16 @@ describe('SubscriptionsController', () => {
       const id = 'sub-123';
       const expectedResult = { message: 'Subscription activated successfully' };
 
-      mockSubscriptionsService.activateSubscription.mockResolvedValue(expectedResult);
+      mockSubscriptionsService.activateSubscription.mockResolvedValue(
+        expectedResult,
+      );
 
       const result = await controller.activate(id);
 
       expect(result).toEqual(expectedResult);
-      expect(subscriptionsService.activateSubscription).toHaveBeenCalledWith(id);
+      expect(subscriptionsService.activateSubscription).toHaveBeenCalledWith(
+        id,
+      );
     });
 
     it('should handle activation errors', async () => {
@@ -195,13 +205,17 @@ describe('SubscriptionsController', () => {
 
       mockSubscriptionsService.activateSubscription.mockRejectedValue(error);
 
-      await expect(controller.activate(id)).rejects.toThrow('Activation failed');
+      await expect(controller.activate(id)).rejects.toThrow(
+        'Activation failed',
+      );
     });
   });
 
   describe('additional edge cases', () => {
     it('should handle service errors in findAll', async () => {
-      mockSubscriptionsService.findAll.mockRejectedValue(new Error('Database error'));
+      mockSubscriptionsService.findAll.mockRejectedValue(
+        new Error('Database error'),
+      );
 
       await expect(controller.findAll()).rejects.toThrow('Database error');
     });
@@ -210,17 +224,25 @@ describe('SubscriptionsController', () => {
       const subscriptionId = 'sub-123';
       const updateDto = { name: 'Updated' };
 
-      mockSubscriptionsService.update.mockRejectedValue(new Error('Update failed'));
+      mockSubscriptionsService.update.mockRejectedValue(
+        new Error('Update failed'),
+      );
 
-      await expect(controller.update(subscriptionId, updateDto)).rejects.toThrow('Update failed');
+      await expect(
+        controller.update(subscriptionId, updateDto),
+      ).rejects.toThrow('Update failed');
     });
 
     it('should handle service errors in remove', async () => {
       const subscriptionId = 'sub-123';
 
-      mockSubscriptionsService.remove.mockRejectedValue(new Error('Remove failed'));
+      mockSubscriptionsService.remove.mockRejectedValue(
+        new Error('Remove failed'),
+      );
 
-      await expect(controller.remove(subscriptionId)).rejects.toThrow('Remove failed');
+      await expect(controller.remove(subscriptionId)).rejects.toThrow(
+        'Remove failed',
+      );
     });
   });
 });
