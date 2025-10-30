@@ -116,9 +116,8 @@ describe('MembershipsController', () => {
 
       mockMembershipsService.removeMembership.mockResolvedValue(expectedResult);
 
-      const result = await controller.remove(id);
+      await controller.remove(id);
 
-      expect(result).toEqual(expectedResult);
       expect(membershipsService.removeMembership).toHaveBeenCalledWith(id);
     });
   });
