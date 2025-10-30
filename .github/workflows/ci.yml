@@ -34,31 +34,32 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Setup de Bun
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+      # 2. Setup de Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: '18'
+          cache: 'npm'
 
       # 3. Instalar dependencias
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: npm ci
 
       # 4. Linter (ESLint)
       - name: Run ESLint
-        run: bun run lint
+        run: npm run lint
 
       # 5. Formateo (Prettier check)
       - name: Check code formatting
-        run: bun x prettier --check "src/**/*.ts" "test/**/*.ts"
+        run: npx prettier --check "src/**/*.ts" "test/**/*.ts"
 
       # 6. Build del proyecto
       - name: Build project
-        run: bun run build
+        run: npm run build
 
       # 7. Ejecutar pruebas unitarias con coverage
       - name: Run unit tests with coverage
-        run: bun run test:cov
+        run: npm run test:cov
         env:
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
@@ -246,18 +247,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: '18'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: npm ci
 
       - name: Run security audit
         run: |
           echo "🔒 Running security audit..."
-          bun audit || echo "⚠️ Security vulnerabilities found, but not blocking CI"
+          npm audit || echo "⚠️ Security vulnerabilities found, but not blocking CI"
 
       - name: Check for secrets in code
         run: |

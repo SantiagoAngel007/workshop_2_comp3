@@ -17,28 +17,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: '18'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: npm ci
 
       - name: Type check
         run: |
           echo "🔍 Running TypeScript type check..."
-          bun run build --noEmit || bun x tsc --noEmit
+          npm run build --noEmit || npx tsc --noEmit
 
       - name: Lint check
         run: |
           echo "🧹 Running ESLint..."
-          bun run lint
+          npm run lint
 
       - name: Quick tests (unit tests only)
         run: |
           echo "🧪 Running quick unit tests..."
-          bun run test --passWithNoTests --testPathIgnorePatterns="e2e"
+          npm run test -- --passWithNoTests --testPathIgnorePatterns="e2e"
         env:
           NODE_ENV: test
 
@@ -67,16 +68,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: '18'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: npm ci
 
       - name: Run full test suite
-        run: bun run test:cov
+        run: npm run test:cov
         env:
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432

@@ -63,16 +63,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: '18'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: npm ci
 
       - name: Run full test suite
-        run: bun run test:cov
+        run: npm run test:cov
         env:
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
