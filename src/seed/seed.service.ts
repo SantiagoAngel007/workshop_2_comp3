@@ -31,6 +31,7 @@ export class SeedService {
       await this.authService.userRepository.query(
         `ALTER TABLE "user_roles" DISABLE TRIGGER ALL`,
       );
+      await this.authService.userRepository.query(`DELETE FROM "attendances"`);
       await this.authService.userRepository.query(`DELETE FROM "user_roles"`);
       await this.authService.userRepository.query(`DELETE FROM "user"`);
       await this.authService.roleRepository.query(`DELETE FROM "roles"`);
@@ -40,6 +41,7 @@ export class SeedService {
     } catch {
       // Si la tabla no existe, usa query directo
       try {
+        await this.authService.userRepository.query(`DELETE FROM "attendances"`);
         await this.authService.userRepository.query(`DELETE FROM "user"`);
         await this.authService.roleRepository.query(`DELETE FROM "roles"`);
       } catch {
