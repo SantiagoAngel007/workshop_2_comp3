@@ -1,8 +1,3 @@
-import type { User } from 'src/auth/entities/users.entity';
-import { User as UserEntity } from 'src/auth/entities/users.entity';
-import type { Membership } from 'src/memberships/entities/membership.entity';
-import { Membership as MembershipEntity } from 'src/memberships/entities/membership.entity';
-
 import {
   Column,
   ManyToMany,
@@ -11,7 +6,6 @@ import {
   Entity,
   CreateDateColumn,
   UpdateDateColumn,
-  DeleteDateColumn,
   ManyToOne,
 } from 'typeorm';
 
@@ -38,34 +32,23 @@ export class Subscription {
   @Column('date')
   purchase_date: Date;
 
+  @Column('bool', { default: true })
+  isActive: boolean;
+
   @CreateDateColumn()
   created_at: Date;
 
   @UpdateDateColumn()
   updated_at: Date;
 
-  @DeleteDateColumn()
-  deleted_at: Date;
+  @ManyToOne('User', 'subscriptions', { onDelete: 'CASCADE' })
+  user: any;
 
-  @ManyToOne(() => UserEntity, (user) => user.subscriptions, {
-    onDelete: 'CASCADE',
-  })
-  user: User;
-
-  @ManyToMany(
-    () => MembershipEntity,
-    (membership) => membership.subscriptions,
-    {
-      eager: false,
-    },
-  )
+  @ManyToMany('Membership', { eager: false })
   @JoinTable({
     name: 'subscription_memberships',
     joinColumn: { name: 'subscriptionId', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'membershipId', referencedColumnName: 'id' },
   })
-  memberships: Membership[];
-
-  @Column({ type: 'boolean', default: true, name: 'is_active' })
-  isActive: boolean;
+  memberships: any[];
 }

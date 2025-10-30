@@ -43,7 +43,7 @@ describe('AuthController', () => {
         age: 25,
         password: 'password123',
       };
-      const expectedResult = { user: mockUser, token: 'jwt-token' };
+      const expectedResult = { ...mockUser, token: 'jwt-token' };
 
       mockAuthService.create.mockResolvedValue(expectedResult);
 
@@ -60,7 +60,7 @@ describe('AuthController', () => {
         email: 'test@example.com',
         password: 'password123',
       };
-      const expectedResult = { user: mockUser, token: 'jwt-token' };
+      const expectedResult = { ...mockUser, token: 'jwt-token' };
 
       mockAuthService.login.mockResolvedValue(expectedResult);
 
@@ -121,7 +121,7 @@ describe('AuthController', () => {
   describe('remove', () => {
     it('should remove user', async () => {
       const userId = '123';
-      const expectedResult = mockUser;
+      const expectedResult = { message: 'User deleted successfully' };
 
       mockAuthService.remove.mockResolvedValue(expectedResult);
 

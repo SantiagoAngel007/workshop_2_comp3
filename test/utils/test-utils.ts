@@ -9,7 +9,9 @@ export const createMockRepository = <T = any>(): Partial<Repository<T>> => ({
   update: jest.fn(),
   delete: jest.fn(),
   remove: jest.fn(),
+  softRemove: jest.fn(),
   count: jest.fn(),
+  findByIds: jest.fn(),
   createQueryBuilder: jest.fn(() => ({
     where: jest.fn().mockReturnThis(),
     andWhere: jest.fn().mockReturnThis(),

@@ -1,13 +1,11 @@
-import type { Subscription } from '../../subscriptions/entities/subscription.entity';
-import { Subscription as SubscriptionEntity } from '../../subscriptions/entities/subscription.entity';
 import {
   Column,
   ManyToMany,
+  JoinTable,
   PrimaryGeneratedColumn,
   Entity,
   CreateDateColumn,
   UpdateDateColumn,
-  DeleteDateColumn,
 } from 'typeorm';
 
 @Entity()
@@ -21,8 +19,8 @@ export class Membership {
   @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
   cost: number;
 
-  @Column('boolean', { default: true })
-  status: boolean;
+  @Column('boolean')
+  status?: boolean;
 
   @Column('int')
   max_classes_assistance: number;
@@ -39,13 +37,11 @@ export class Membership {
   @UpdateDateColumn()
   updated_at: Date;
 
-  @DeleteDateColumn()
-  deleted_at: Date;
-
-  @ManyToMany(
-    () => SubscriptionEntity,
-    (subscription) => subscription.memberships,
-    { eager: false },
-  )
-  subscriptions: Subscription[];
+  @ManyToMany('Subscription', { eager: false })
+  @JoinTable({
+    name: 'memberships_subscription',
+    joinColumn: { name: 'membershipId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'subscriptionId', referencedColumnName: 'id' },
+  })
+  Subscription: any[];
 }

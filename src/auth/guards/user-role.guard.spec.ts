@@ -1,26 +1,30 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Reflector } from '@nestjs/core';
 import { UserRoleGuard } from './user-role.guard';
-import {
-  BadRequestException,
-  ForbiddenException,
-  ExecutionContext,
-} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { ExecutionContext, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { META_DATA } from '../decorators/role-protected/role-protected.decorator';
+import { ValidRoles } from '../enums/roles.enum';
+import { User } from '../entities/users.entity';
+import { HttpArgumentsHost } from '@nestjs/common/interfaces';
+
+const createMockExecutionContext = (user?: any): ExecutionContext & { switchToHttp: () => HttpArgumentsHost } => ({
+  getHandler: jest.fn(),
+  getClass: jest.fn(),
+  getType: jest.fn(),
+  getArgs: jest.fn(),
+  getArgByIndex: jest.fn(),
+  switchToRpc: jest.fn(),
+  switchToWs: jest.fn(),
+  switchToHttp: () => ({
+    getRequest: () => ({ user }),
+    getResponse: jest.fn(),
+    getNext: jest.fn(),
+  }),
+});
 
 describe('UserRoleGuard', () => {
   let guard: UserRoleGuard;
-
-  const mockContext = {
-    switchToHttp: jest.fn().mockReturnValue({
-      getRequest: jest.fn().mockReturnValue({
-        user: null,
-      }),
-    }),
-  };
-
-  const mockReflector = {
-    get: jest.fn(),
-  };
+  let reflector: Reflector;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -28,51 +32,120 @@ describe('UserRoleGuard', () => {
         UserRoleGuard,
         {
           provide: Reflector,
-          useValue: mockReflector,
+          useValue: {
+            get: jest.fn(),
+          },
         },
       ],
     }).compile();
 
     guard = module.get<UserRoleGuard>(UserRoleGuard);
+    reflector = module.get<Reflector>(Reflector);
   });
 
-  describe('canActivate', () => {
-    it('should return true if no roles are defined', async () => {
-      mockReflector.get.mockReturnValue([]);
-      const result = await guard.canActivate(
-        mockContext as unknown as ExecutionContext,
-      );
-      expect(result).toBe(true);
+  it('should be defined', () => {
+    expect(guard).toBeDefined();
+  });
+
+  it('should allow access when no roles are specified', () => {
+    const mockContext = createMockExecutionContext({
+      roles: [{ name: ValidRoles.client }]
     });
 
-    it('should throw BadRequestException if user or roles are not found', async () => {
-      mockReflector.get.mockReturnValue(['admin']);
-      mockContext.switchToHttp().getRequest.mockReturnValue({ user: null });
+    jest.spyOn(reflector, 'get').mockReturnValue(undefined);
 
-      await expect(
-        guard.canActivate(mockContext as unknown as ExecutionContext),
-      ).rejects.toThrow(BadRequestException);
+    const result = guard.canActivate(mockContext);
+    expect(result).toBe(true);
+  });
+
+  it('should allow access when empty roles array is specified', () => {
+    const mockContext = createMockExecutionContext({
+      roles: [{ name: ValidRoles.client }]
     });
 
-    it('should return true if user has a valid role', async () => {
-      mockReflector.get.mockReturnValue(['admin']);
-      const user = { roles: [{ name: 'admin' }] };
-      mockContext.switchToHttp().getRequest.mockReturnValue({ user });
+    jest.spyOn(reflector, 'get').mockReturnValue([]);
 
-      const result = await guard.canActivate(
-        mockContext as unknown as ExecutionContext,
-      );
-      expect(result).toBe(true);
+    const result = guard.canActivate(mockContext);
+    expect(result).toBe(true);
+  });
+
+  it('should throw BadRequestException when user is not found in request', () => {
+    const mockContext = createMockExecutionContext(null);
+
+    jest.spyOn(reflector, 'get').mockReturnValue([ValidRoles.admin]);
+
+    expect(() => guard.canActivate(mockContext)).toThrow(BadRequestException);
+    expect(() => guard.canActivate(mockContext)).toThrow('User or roles not found');
+  });
+
+  it('should throw BadRequestException when user has no roles', () => {
+    const mockContext = createMockExecutionContext({
+      email: 'test@example.com',
+      roles: null,
     });
 
-    it('should throw ForbiddenException if user does not have a valid role', async () => {
-      mockReflector.get.mockReturnValue(['admin']);
-      const user = { roles: [{ name: 'client' }], email: 'test@test.com' };
-      mockContext.switchToHttp().getRequest.mockReturnValue({ user });
+    jest.spyOn(reflector, 'get').mockReturnValue([ValidRoles.admin]);
 
-      await expect(
-        guard.canActivate(mockContext as unknown as ExecutionContext),
-      ).rejects.toThrow(ForbiddenException);
-    });
+    expect(() => guard.canActivate(mockContext)).toThrow(BadRequestException);
+    expect(() => guard.canActivate(mockContext)).toThrow('User or roles not found');
+  });
+
+  it('should allow access when user has valid role', () => {
+    const mockUser = {
+      email: 'admin@example.com',
+      roles: [{ name: ValidRoles.admin }],
+    } as User;
+
+    const mockContext = createMockExecutionContext(mockUser);
+
+    jest.spyOn(reflector, 'get').mockReturnValue([ValidRoles.admin]);
+
+    const result = guard.canActivate(mockContext);
+    expect(result).toBe(true);
+  });
+
+  it('should throw ForbiddenException when user has no valid role', () => {
+    const mockUser = {
+      email: 'user@example.com',
+      roles: [{ name: ValidRoles.client }],
+    } as User;
+
+    const mockContext = createMockExecutionContext(mockUser);
+
+    jest.spyOn(reflector, 'get').mockReturnValue([ValidRoles.admin]);
+
+    expect(() => guard.canActivate(mockContext)).toThrow(ForbiddenException);
+    expect(() => guard.canActivate(mockContext)).toThrow(`User ${mockUser.email} needs a valid role`);
+  });
+
+  it('should handle multiple valid roles', () => {
+    const mockUser = {
+      email: 'user@example.com',
+      roles: [{ name: ValidRoles.client }],
+    } as User;
+
+    const mockContext = createMockExecutionContext(mockUser);
+
+    jest.spyOn(reflector, 'get').mockReturnValue([ValidRoles.admin, ValidRoles.client]);
+
+    const result = guard.canActivate(mockContext);
+    expect(result).toBe(true);
+  });
+
+  it('should handle user with multiple roles', () => {
+    const mockUser = {
+      email: 'user@example.com',
+      roles: [
+        { name: ValidRoles.client },
+        { name: ValidRoles.admin }
+      ],
+    } as User;
+
+    const mockContext = createMockExecutionContext(mockUser);
+
+    jest.spyOn(reflector, 'get').mockReturnValue([ValidRoles.admin]);
+
+    const result = guard.canActivate(mockContext);
+    expect(result).toBe(true);
   });
 });
