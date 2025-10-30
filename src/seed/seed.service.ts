@@ -71,9 +71,13 @@ private async deleteAllUsersAndRoles() {
     }
   }
 
-  private async deleteAllMemberships() {
+private async deleteAllMemberships() {
+  try {
     await this.membershipRepository.query(`DELETE FROM "membership"`);
+  } catch (error) {
+    console.log('Membership table does not exist yet, will be created by sync');
   }
+}
 
   private async insertMemberships() {
     for (const membershipData of membershipsSeedData) {
