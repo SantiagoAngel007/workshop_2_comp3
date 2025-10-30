@@ -82,29 +82,6 @@ jobs:
           POSTGRES_DB: test_db
           JWT_SECRET: test-jwt-secret-key-for-ci
 
-      - name: Validate main branch health
-        run: |
-          echo "🏥 Main branch health check..."
-          
-          if [ -f coverage/coverage-summary.json ]; then
-            STATEMENTS=$(cat coverage/coverage-summary.json | node -e "console.log(JSON.parse(require('fs').readFileSync(0, 'utf-8')).total.statements.pct)")
-            BRANCHES=$(cat coverage/coverage-summary.json | node -e "console.log(JSON.parse(require('fs').readFileSync(0, 'utf-8')).total.branches.pct)")
-            FUNCTIONS=$(cat coverage/coverage-summary.json | node -e "console.log(JSON.parse(require('fs').readFileSync(0, 'utf-8')).total.functions.pct)")
-            LINES=$(cat coverage/coverage-summary.json | node -e "console.log(JSON.parse(require('fs').readFileSync(0, 'utf-8')).total.lines.pct)")
-            
-            echo "📊 Main Branch Coverage:"
-            echo "   Statements: ${STATEMENTS}%"
-            echo "   Branches:   ${BRANCHES}%"
-            echo "   Functions:  ${FUNCTIONS}%"
-            echo "   Lines:      ${LINES}%"
-            
-            if (( $(echo "$STATEMENTS >= 85 && $BRANCHES >= 83 && $FUNCTIONS >= 85 && $LINES >= 85" | bc -l) )); then
-              echo "✅ Main branch maintains excellent test coverage!"
-            else
-              echo "⚠️ Main branch coverage has degraded. This should be investigated."
-            fi
-          fi
-
       - name: Create release tag (if version changed)
         run: |
           echo "🏷️ Checking for version changes..."

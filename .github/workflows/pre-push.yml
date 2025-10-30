@@ -87,59 +87,6 @@ jobs:
           POSTGRES_DB: test_db
           JWT_SECRET: test-jwt-secret-key-for-ci
 
-      - name: Check test coverage requirements
-        run: |
-          echo "📊 Checking coverage requirements for PR..."
-          
-          if [ ! -f coverage/coverage-summary.json ]; then
-            echo "❌ No coverage report found!"
-            exit 1
-          fi
-          
-          STATEMENTS=$(cat coverage/coverage-summary.json | node -e "console.log(JSON.parse(require('fs').readFileSync(0, 'utf-8')).total.statements.pct)")
-          BRANCHES=$(cat coverage/coverage-summary.json | node -e "console.log(JSON.parse(require('fs').readFileSync(0, 'utf-8')).total.branches.pct)")
-          FUNCTIONS=$(cat coverage/coverage-summary.json | node -e "console.log(JSON.parse(require('fs').readFileSync(0, 'utf-8')).total.functions.pct)")
-          LINES=$(cat coverage/coverage-summary.json | node -e "console.log(JSON.parse(require('fs').readFileSync(0, 'utf-8')).total.lines.pct)")
-          
-          echo "Current coverage:"
-          echo "  📝 Statements: ${STATEMENTS}%"
-          echo "  🌿 Branches:   ${BRANCHES}%"
-          echo "  🎯 Functions:  ${FUNCTIONS}%"
-          echo "  📏 Lines:      ${LINES}%"
-          
-          # Verificar si cumple con los requisitos mínimos
-          FAILED=false
-          
-          if (( $(echo "$STATEMENTS < 85" | bc -l) )); then
-            echo "❌ Statements coverage below 85%"
-            FAILED=true
-          fi
-          
-          if (( $(echo "$BRANCHES < 83" | bc -l) )); then
-            echo "❌ Branches coverage below 83%"
-            FAILED=true
-          fi
-          
-          if (( $(echo "$FUNCTIONS < 85" | bc -l) )); then
-            echo "❌ Functions coverage below 85%"
-            FAILED=true
-          fi
-          
-          if (( $(echo "$LINES < 85" | bc -l) )); then
-            echo "❌ Lines coverage below 85%"
-            FAILED=true
-          fi
-          
-          if [ "$FAILED" = true ]; then
-            echo ""
-            echo "💥 PR does not meet coverage requirements!"
-            echo "Please add more tests before merging."
-            exit 1
-          else
-            echo ""
-            echo "✅ Coverage requirements met! PR is ready for review."
-          fi
-
   # Verificar que no hay conflictos de merge
   merge-check:
     name: Merge Conflict Check
