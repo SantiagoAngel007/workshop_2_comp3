@@ -11,7 +11,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateAttendanceDto {
   @ApiProperty({
-    description: "The unique identifier (UUID) of the user checking in.",
+    description: 'The unique identifier (UUID) of the user checking in.',
     example: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',
   })
   @IsUUID()
@@ -42,7 +42,8 @@ export class CreateAttendanceDto {
   readonly type: AttendanceType;
 
   @ApiProperty({
-    description: 'A key representing the date of the attendance, typically in YYYY-MM-DD format.',
+    description:
+      'A key representing the date of the attendance, typically in YYYY-MM-DD format.',
     example: '2025-10-28',
   })
   @IsString()

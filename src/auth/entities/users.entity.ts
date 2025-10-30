@@ -15,7 +15,6 @@ import { Subscription as SubscriptionEntity } from 'src/subscriptions/entities/s
 import type { Attendance } from 'src/attendances/entities/attendance.entity';
 import { Attendance as AttendanceEntity } from 'src/attendances/entities/attendance.entity';
 
-
 @Entity()
 export class User {
   @PrimaryGeneratedColumn('uuid')

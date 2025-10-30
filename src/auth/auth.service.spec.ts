@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -5,8 +6,17 @@ import { JwtService } from '@nestjs/jwt';
 import { User } from './entities/users.entity';
 import { Role } from './entities/roles.entity';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
-import { createMockRepository, mockUser, mockRole } from '../../test/utils/test-utils';
-import { UnauthorizedException, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import {
+  createMockRepository,
+  mockUser,
+  mockRole,
+} from '../../test/utils/test-utils';
+import {
+  UnauthorizedException,
+  NotFoundException,
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ValidRoles } from './enums/roles.enum';
 import * as bcrypt from 'bcrypt';
 
@@ -50,7 +60,8 @@ describe('AuthService', () => {
     userRepository = module.get(getRepositoryToken(User));
     roleRepository = module.get(getRepositoryToken(Role));
     jwtService = module.get<JwtService>(JwtService);
-    subscriptionsService = module.get<SubscriptionsService>(SubscriptionsService);
+    subscriptionsService =
+      module.get<SubscriptionsService>(SubscriptionsService);
   });
 
   it('should be defined', () => {
@@ -72,7 +83,10 @@ describe('AuthService', () => {
 
       (bcrypt.hashSync as jest.Mock).mockReturnValue(hashedPassword);
       roleRepository.findOneBy.mockResolvedValue(defaultRole);
-      userRepository.create.mockReturnValue({ ...createUserDto, password: hashedPassword });
+      userRepository.create.mockReturnValue({
+        ...createUserDto,
+        password: hashedPassword,
+      });
       userRepository.save.mockResolvedValue(savedUser);
       subscriptionsService.createSubscriptionForUser.mockResolvedValue({});
       jwtService.sign.mockReturnValue('jwt-token');
@@ -100,7 +114,9 @@ describe('AuthService', () => {
       roleRepository.findOneBy.mockResolvedValue(null);
       userRepository.create.mockReturnValue(createUserDto);
 
-      await expect(service.create(createUserDto)).rejects.toThrow(InternalServerErrorException);
+      await expect(service.create(createUserDto)).rejects.toThrow(
+        InternalServerErrorException,
+      );
     });
 
     it('should handle database errors during user creation', async () => {
@@ -147,7 +163,9 @@ describe('AuthService', () => {
 
       userRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException for invalid password', async () => {
@@ -160,7 +178,9 @@ describe('AuthService', () => {
       userRepository.findOne.mockResolvedValue(user);
       (bcrypt.compareSync as jest.Mock).mockReturnValue(false);
 
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException for inactive user', async () => {
@@ -173,7 +193,9 @@ describe('AuthService', () => {
       userRepository.findOne.mockResolvedValue(user);
       (bcrypt.compareSync as jest.Mock).mockReturnValue(true);
 
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
@@ -185,7 +207,9 @@ describe('AuthService', () => {
       const result = await service.findAll();
 
       expect(result).toEqual(users);
-      expect(userRepository.find).toHaveBeenCalledWith({ relations: ['roles'] });
+      expect(userRepository.find).toHaveBeenCalledWith({
+        relations: ['roles'],
+      });
     });
   });
 
@@ -227,7 +251,9 @@ describe('AuthService', () => {
       const updateUserDto = { fullName: 'Updated Name' };
       userRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.update('123', updateUserDto)).rejects.toThrow(NotFoundException);
+      await expect(service.update('123', updateUserDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should hash password if provided in update', async () => {
@@ -237,7 +263,10 @@ describe('AuthService', () => {
 
       userRepository.findOne.mockResolvedValue(existingUser);
       (bcrypt.hashSync as jest.Mock).mockReturnValue(hashedPassword);
-      userRepository.save.mockResolvedValue({ ...existingUser, password: hashedPassword });
+      userRepository.save.mockResolvedValue({
+        ...existingUser,
+        password: hashedPassword,
+      });
 
       await service.update('123', updateUserDto);
 

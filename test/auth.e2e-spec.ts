@@ -7,7 +7,8 @@ import { User } from '../src/auth/entities/users.entity';
 import { Role } from '../src/auth/entities/roles.entity';
 import { Repository } from 'typeorm';
 import { ValidRoles } from '../src/auth/enums/roles.enum';
-import * as bcrypt from 'bcryptjs';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const bcrypt = require('bcryptjs');
 
 describe('Auth (e2e)', () => {
   let app: INestApplication;
@@ -21,9 +22,13 @@ describe('Auth (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe());
-    
-    userRepository = moduleFixture.get<Repository<User>>(getRepositoryToken(User));
-    roleRepository = moduleFixture.get<Repository<Role>>(getRepositoryToken(Role));
+
+    userRepository = moduleFixture.get<Repository<User>>(
+      getRepositoryToken(User),
+    );
+    roleRepository = moduleFixture.get<Repository<Role>>(
+      getRepositoryToken(Role),
+    );
 
     await app.init();
   });
@@ -115,9 +120,11 @@ describe('Auth (e2e)', () => {
   describe('/auth/login (POST)', () => {
     beforeEach(async () => {
       // Create a test user
-      const clientRole = await roleRepository.findOne({ where: { name: ValidRoles.client } });
+      const clientRole = await roleRepository.findOne({
+        where: { name: ValidRoles.client },
+      });
       const hashedPassword = bcrypt.hashSync('password123', 10);
-      
+
       const user = userRepository.create({
         email: 'test@example.com',
         fullName: 'Test User',
@@ -126,7 +133,7 @@ describe('Auth (e2e)', () => {
         isActive: true,
         roles: [clientRole],
       });
-      
+
       await userRepository.save(user);
     });
 
@@ -182,7 +189,9 @@ describe('Auth (e2e)', () => {
   describe('/auth (GET)', () => {
     it('should return all users', async () => {
       // Create test users
-      const clientRole = await roleRepository.findOne({ where: { name: ValidRoles.client } });
+      const clientRole = await roleRepository.findOne({
+        where: { name: ValidRoles.client },
+      });
       const users = [
         userRepository.create({
           email: 'user1@example.com',
@@ -199,7 +208,7 @@ describe('Auth (e2e)', () => {
           roles: [clientRole],
         }),
       ];
-      
+
       await userRepository.save(users);
 
       return request(app.getHttpServer())
@@ -214,7 +223,9 @@ describe('Auth (e2e)', () => {
 
   describe('/auth/:id (GET)', () => {
     it('should return user by id', async () => {
-      const clientRole = await roleRepository.findOne({ where: { name: ValidRoles.client } });
+      const clientRole = await roleRepository.findOne({
+        where: { name: ValidRoles.client },
+      });
       const user = userRepository.create({
         email: 'test@example.com',
         fullName: 'Test User',
@@ -222,7 +233,7 @@ describe('Auth (e2e)', () => {
         password: 'hashedpassword',
         roles: [clientRole],
       });
-      
+
       const savedUser = await userRepository.save(user);
 
       return request(app.getHttpServer())
@@ -236,7 +247,7 @@ describe('Auth (e2e)', () => {
 
     it('should return 404 for non-existent user', () => {
       const nonExistentId = '123e4567-e89b-12d3-a456-426614174000';
-      
+
       return request(app.getHttpServer())
         .get(`/auth/${nonExistentId}`)
         .expect(404);

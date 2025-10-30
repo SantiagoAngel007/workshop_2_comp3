@@ -4,7 +4,8 @@ import { Role } from '../../src/auth/entities/roles.entity';
 import { Subscription } from '../../src/subscriptions/entities/subscription.entity';
 import { Membership } from '../../src/memberships/entities/membership.entity';
 import { ValidRoles } from '../../src/auth/enums/roles.enum';
-import * as bcrypt from 'bcryptjs';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const bcrypt = require('bcryptjs');
 
 export class DatabaseTestUtils {
   static async cleanDatabase(
@@ -26,7 +27,7 @@ export class DatabaseTestUtils {
       { name: ValidRoles.receptionist },
     ];
 
-    const roleEntities = roles.map(role => roleRepository.create(role));
+    const roleEntities = roles.map((role) => roleRepository.create(role));
     return await roleRepository.save(roleEntities);
   }
 
@@ -45,6 +46,7 @@ export class DatabaseTestUtils {
       email: 'test@example.com',
       fullName: 'Test User',
       age: 25,
+
       password: bcrypt.hashSync('password123', 10),
       isActive: true,
       roles: [role],
@@ -67,7 +69,10 @@ export class DatabaseTestUtils {
       duration_months: 1,
     };
 
-    const membership = membershipRepository.create({ ...defaultMembershipData, ...membershipData });
+    const membership = membershipRepository.create({
+      ...defaultMembershipData,
+      ...membershipData,
+    });
     return await membershipRepository.save(membership);
   }
 
@@ -86,7 +91,10 @@ export class DatabaseTestUtils {
       user,
     };
 
-    const subscription = subscriptionRepository.create({ ...defaultSubscriptionData, ...subscriptionData });
+    const subscription = subscriptionRepository.create({
+      ...defaultSubscriptionData,
+      ...subscriptionData,
+    });
     return await subscriptionRepository.save(subscription);
   }
 }

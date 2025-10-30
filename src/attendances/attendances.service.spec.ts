@@ -1,11 +1,20 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Test, TestingModule } from '@nestjs/testing';
 import { AttendancesService } from './attendances.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Attendance } from './entities/attendance.entity';
 import { User } from '../users/entities/user.entity';
 import { Subscription } from '../subscriptions/entities/subscription.entity';
-import { createMockRepository, mockUser, mockSubscription } from '../../test/utils/test-utils';
-import { NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
+import {
+  createMockRepository,
+  mockUser,
+  mockSubscription,
+} from '../../test/utils/test-utils';
+import {
+  NotFoundException,
+  ConflictException,
+  // ForbiddenException,
+} from '@nestjs/common';
 
 describe('AttendancesService', () => {
   let service: AttendancesService;
@@ -79,7 +88,9 @@ describe('AttendancesService', () => {
 
       userRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(NotFoundException);
+      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ConflictException if user already checked in', async () => {
@@ -92,7 +103,9 @@ describe('AttendancesService', () => {
       subscriptionRepository.findOne.mockResolvedValue(mockSubscription);
       attendanceRepository.findOne.mockResolvedValue(mockAttendance);
 
-      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(ConflictException);
+      await expect(service.checkIn(createAttendanceDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -117,7 +130,9 @@ describe('AttendancesService', () => {
       userRepository.findOne.mockResolvedValue(mockUser);
       attendanceRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.checkOut({ userId })).rejects.toThrow(NotFoundException);
+      await expect(service.checkOut({ userId })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -144,7 +159,9 @@ describe('AttendancesService', () => {
 
       userRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.getAvailableAttendances(userId)).rejects.toThrow(NotFoundException);
+      await expect(service.getAvailableAttendances(userId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

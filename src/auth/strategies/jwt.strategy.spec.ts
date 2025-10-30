@@ -59,15 +59,21 @@ describe('JwtStrategy', () => {
       const payload: Jwt = { id: 'uuid1', email: 'test@example.com' };
       jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
 
-      await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
+      await expect(strategy.validate(payload)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if user is inactive', async () => {
       const payload: Jwt = { id: 'uuid1', email: 'test@example.com' };
       const inactiveUser = { ...mockUser, isActive: false };
-      jest.spyOn(userRepository, 'findOne').mockResolvedValue(inactiveUser as User);
+      jest
+        .spyOn(userRepository, 'findOne')
+        .mockResolvedValue(inactiveUser as User);
 
-      await expect(strategy.validate(payload)).rejects.toThrow(UnauthorizedException);
+      await expect(strategy.validate(payload)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 });

@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MembershipsService } from './memberships.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Membership } from './entities/membership.entity';
-import { createMockRepository, mockMembership } from '../../test/utils/test-utils';
+import {
+  createMockRepository,
+  mockMembership,
+} from '../../test/utils/test-utils';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 
 describe('MembershipsService', () => {
@@ -59,7 +62,9 @@ describe('MembershipsService', () => {
       const membershipId = 'invalid-id';
       membershipRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.findMembershipById(membershipId)).rejects.toThrow(NotFoundException);
+      await expect(service.findMembershipById(membershipId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -81,7 +86,9 @@ describe('MembershipsService', () => {
       const result = await service.create(createMembershipDto);
 
       expect(result).toEqual(mockMembership);
-      expect(membershipRepository.create).toHaveBeenCalledWith(createMembershipDto);
+      expect(membershipRepository.create).toHaveBeenCalledWith(
+        createMembershipDto,
+      );
     });
 
     it('should throw ConflictException if membership name already exists', async () => {
@@ -96,7 +103,9 @@ describe('MembershipsService', () => {
 
       membershipRepository.findOne.mockResolvedValue(mockMembership);
 
-      await expect(service.create(createMembershipDto)).rejects.toThrow(ConflictException);
+      await expect(service.create(createMembershipDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -104,7 +113,10 @@ describe('MembershipsService', () => {
     it('should update membership successfully', async () => {
       const membershipId = 'membership-123';
       const updateMembershipDto = { name: 'Updated Membership' };
-      const updatedMembership = { ...mockMembership, name: 'Updated Membership' };
+      const updatedMembership = {
+        ...mockMembership,
+        name: 'Updated Membership',
+      };
 
       membershipRepository.findOne.mockResolvedValue(mockMembership);
       membershipRepository.save.mockResolvedValue(updatedMembership);
@@ -120,7 +132,9 @@ describe('MembershipsService', () => {
 
       membershipRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.update(membershipId, updateMembershipDto)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.update(membershipId, updateMembershipDto),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -141,7 +155,9 @@ describe('MembershipsService', () => {
 
       membershipRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.remove(membershipId)).rejects.toThrow(NotFoundException);
+      await expect(service.remove(membershipId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

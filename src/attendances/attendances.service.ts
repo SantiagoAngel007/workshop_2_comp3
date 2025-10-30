@@ -111,31 +111,25 @@ export class AttendancesService {
     userId: string,
     queryParams: GetHistoryDto,
   ): Promise<Attendance[]> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const { from, to, type } = queryParams;
     await this.validateUserExists(userId);
 
-    const whereClause: any = { user: { id: userId } };
+    const whereClause: Record<string, unknown> = { user: { id: userId } };
 
     if (type) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
       whereClause.type = type;
     }
 
     if (from && to) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       whereClause.entranceDatetime = Between(
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         new Date(from),
         new Date(to + 'T23:59:59.999Z'),
       );
     } else if (from) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       whereClause.entranceDatetime = MoreThanOrEqual(new Date(from));
     }
 
     return this.attendanceRepository.find({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       where: whereClause,
       order: { entranceDatetime: 'DESC' },
     });
@@ -197,12 +191,8 @@ export class AttendancesService {
       const available = await this.calculateAvailableAttendances(userId);
       return type === AttendanceType.GYM ? available.gym : available.classes;
     } catch (error) {
-      console.log(
-        '🚀 ~ AttendanceService ~ hasAvailableAttendances ~ error:',
-        error,
-      );
       // Si hay un error (ej. no tiene suscripción), no tiene pases.
-
+      console.error('Error calculating available attendances:', error);
       return 0;
     }
   }

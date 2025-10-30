@@ -14,7 +14,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/users.entity';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const bcrypt = require('bcryptjs');
 import { LoginDto } from './dto/login.dto';
 import { Jwt } from './interfaces/jwt.interface';
 import { JwtService } from '@nestjs/jwt';
@@ -64,7 +65,7 @@ export class AuthService {
         // Logueamos el error para verlo en la consola con todos sus detalles
         this.logger.error(
           `FATAL: Failed to create subscription for user ${user.id}. Registration aborted.`,
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
           subscriptionError.stack, // El .stack da mucha más información
         );
         // Volvemos a lanzar el error para que la petición falle y veamos el problema
@@ -101,7 +102,7 @@ export class AuthService {
       throw new NotFoundException(`User ${email} not found`);
     }
 
-    if (!bcrypt.compareSync(password, user.password!)) {
+    if (!bcrypt.compareSync(password, user.password || '')) {
       throw new UnauthorizedException('Email or password incorrect');
     }
 
@@ -118,6 +119,7 @@ export class AuthService {
         relations: ['roles'],
       });
       return users.map((user) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { password, ...safeUser } = user;
         return safeUser;
       });
@@ -156,7 +158,7 @@ export class AuthService {
     }
 
     const isAdmin = authUser.roles.some(
-      (role) => role.name === ValidRoles.admin,
+      (role) => role.name === String(ValidRoles.admin),
     );
 
     if (!isAdmin && authUser.id !== idToUpdate) {
@@ -231,6 +233,7 @@ export class AuthService {
   }
 
   encryptPassword(password: string): string {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return bcrypt.hashSync(password, 10);
   }
 
@@ -240,6 +243,7 @@ export class AuthService {
 
   private handleException(error: any): never {
     this.logger.error(error);
+
     if (error.code === '23505') {
       throw new BadRequestException(error.detail);
     }

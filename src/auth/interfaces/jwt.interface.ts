@@ -1,4 +1,4 @@
 export interface Jwt {
-    id:string;
-    email:string;
+  id: string;
+  email: string;
 }

@@ -31,11 +31,19 @@ describe('Subscriptions (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe());
-    
-    userRepository = moduleFixture.get<Repository<User>>(getRepositoryToken(User));
-    roleRepository = moduleFixture.get<Repository<Role>>(getRepositoryToken(Role));
-    subscriptionRepository = moduleFixture.get<Repository<Subscription>>(getRepositoryToken(Subscription));
-    membershipRepository = moduleFixture.get<Repository<Membership>>(getRepositoryToken(Membership));
+
+    userRepository = moduleFixture.get<Repository<User>>(
+      getRepositoryToken(User),
+    );
+    roleRepository = moduleFixture.get<Repository<Role>>(
+      getRepositoryToken(Role),
+    );
+    subscriptionRepository = moduleFixture.get<Repository<Subscription>>(
+      getRepositoryToken(Subscription),
+    );
+    membershipRepository = moduleFixture.get<Repository<Membership>>(
+      getRepositoryToken(Membership),
+    );
     jwtService = moduleFixture.get<JwtService>(JwtService);
 
     await app.init();
@@ -51,12 +59,14 @@ describe('Subscriptions (e2e)', () => {
     // Create roles
     const clientRole = roleRepository.create({ name: ValidRoles.client });
     const adminRole = roleRepository.create({ name: ValidRoles.admin });
-    const receptionistRole = roleRepository.create({ name: ValidRoles.receptionist });
+    const receptionistRole = roleRepository.create({
+      name: ValidRoles.receptionist,
+    });
     await roleRepository.save([clientRole, adminRole, receptionistRole]);
 
     // Create test users
     const hashedPassword = bcrypt.hashSync('password123', 10);
-    
+
     testUser = userRepository.create({
       email: 'client@example.com',
       fullName: 'Test Client',
@@ -65,7 +75,7 @@ describe('Subscriptions (e2e)', () => {
       isActive: true,
       roles: [clientRole],
     });
-    
+
     testAdmin = userRepository.create({
       email: 'admin@example.com',
       fullName: 'Test Admin',
@@ -117,7 +127,7 @@ describe('Subscriptions (e2e)', () => {
 
     it('should fail with non-existent user', () => {
       const nonExistentUserId = '123e4567-e89b-12d3-a456-426614174000';
-      
+
       return request(app.getHttpServer())
         .post('/subscriptions')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -215,7 +225,7 @@ describe('Subscriptions (e2e)', () => {
 
     it('should fail with non-existent membership', () => {
       const nonExistentMembershipId = '123e4567-e89b-12d3-a456-426614174000';
-      
+
       return request(app.getHttpServer())
         .post(`/subscriptions/${subscription.id}/memberships`)
         .set('Authorization', `Bearer ${adminToken}`)
@@ -262,9 +272,7 @@ describe('Subscriptions (e2e)', () => {
     });
 
     it('should fail without authentication', () => {
-      return request(app.getHttpServer())
-        .get('/subscriptions')
-        .expect(401);
+      return request(app.getHttpServer()).get('/subscriptions').expect(401);
     });
 
     it('should fail with client token', () => {
@@ -317,7 +325,7 @@ describe('Subscriptions (e2e)', () => {
 
     it('should return 404 for non-existent subscription', () => {
       const nonExistentId = '123e4567-e89b-12d3-a456-426614174000';
-      
+
       return request(app.getHttpServer())
         .get(`/subscriptions/${nonExistentId}`)
         .set('Authorization', `Bearer ${adminToken}`)

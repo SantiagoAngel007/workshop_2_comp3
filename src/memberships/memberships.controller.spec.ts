@@ -51,7 +51,9 @@ describe('MembershipsController', () => {
       const result = await controller.create(createMembershipDto);
 
       expect(result).toEqual(expectedResult);
-      expect(membershipsService.create).toHaveBeenCalledWith(createMembershipDto);
+      expect(membershipsService.create).toHaveBeenCalledWith(
+        createMembershipDto,
+      );
     });
   });
 
@@ -73,7 +75,9 @@ describe('MembershipsController', () => {
       const id = 'membership-123';
       const expectedResult = mockMembership;
 
-      mockMembershipsService.findMembershipById.mockResolvedValue(expectedResult);
+      mockMembershipsService.findMembershipById.mockResolvedValue(
+        expectedResult,
+      );
 
       const result = await controller.findOne(id);
 
@@ -93,7 +97,10 @@ describe('MembershipsController', () => {
       const result = await controller.update(id, updateMembershipDto);
 
       expect(result).toEqual(expectedResult);
-      expect(membershipsService.update).toHaveBeenCalledWith(id, updateMembershipDto);
+      expect(membershipsService.update).toHaveBeenCalledWith(
+        id,
+        updateMembershipDto,
+      );
     });
   });
 

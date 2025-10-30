@@ -59,7 +59,8 @@ export class CreateSubscriptionDto {
   purchase_date: Date;
 
   @ApiProperty({
-    description: 'An array of membership UUIDs to associate with this subscription.',
+    description:
+      'An array of membership UUIDs to associate with this subscription.',
     example: ['a1b2c3d4-e5f6-7890-1234-567890abcdef'],
     type: [String],
   })

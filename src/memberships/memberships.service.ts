@@ -14,7 +14,7 @@ export class MembershipsService {
   constructor(
     @InjectRepository(Membership)
     private readonly membershipRepository: Repository<Membership>,
-  ) { }
+  ) {}
 
   //todas las membresías
   async findAll(): Promise<Membership[]> {
@@ -40,7 +40,6 @@ export class MembershipsService {
   async createNewMembership(
     createMembershipDto: CreateMembershipDto,
   ): Promise<Membership> {
-
     await this.validateNameIsUnique(createMembershipDto.name);
 
     // crear la membresía (TypeORM genera el UUID automáticamente)

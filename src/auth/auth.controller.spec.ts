@@ -110,7 +110,11 @@ describe('AuthController', () => {
       const result = await controller.update(userId, updateUserDto, authUser);
 
       expect(result).toEqual(expectedResult);
-      expect(authService.update).toHaveBeenCalledWith(userId, updateUserDto, authUser);
+      expect(authService.update).toHaveBeenCalledWith(
+        userId,
+        updateUserDto,
+        authUser,
+      );
     });
   });
 

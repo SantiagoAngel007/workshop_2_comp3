@@ -29,7 +29,8 @@ describe('SubscriptionsController', () => {
     }).compile();
 
     controller = module.get<SubscriptionsController>(SubscriptionsController);
-    subscriptionsService = module.get<SubscriptionsService>(SubscriptionsService);
+    subscriptionsService =
+      module.get<SubscriptionsService>(SubscriptionsService);
   });
 
   it('should be defined', () => {
@@ -41,12 +42,16 @@ describe('SubscriptionsController', () => {
       const userId = 'user-123';
       const expectedResult = mockSubscription;
 
-      mockSubscriptionsService.findSubscriptionByUserId.mockResolvedValue(expectedResult);
+      mockSubscriptionsService.findSubscriptionByUserId.mockResolvedValue(
+        expectedResult,
+      );
 
       const result = await controller.getSubscriptionByUserId(userId);
 
       expect(result).toEqual(expectedResult);
-      expect(subscriptionsService.findSubscriptionByUserId).toHaveBeenCalledWith(userId);
+      expect(
+        subscriptionsService.findSubscriptionByUserId,
+      ).toHaveBeenCalledWith(userId);
     });
   });
 
@@ -55,12 +60,16 @@ describe('SubscriptionsController', () => {
       const userId = 'user-123';
       const expectedResult = mockSubscription;
 
-      mockSubscriptionsService.createSubscriptionForUser.mockResolvedValue(expectedResult);
+      mockSubscriptionsService.createSubscriptionForUser.mockResolvedValue(
+        expectedResult,
+      );
 
       const result = await controller.createSubscription(userId);
 
       expect(result).toEqual(expectedResult);
-      expect(subscriptionsService.createSubscriptionForUser).toHaveBeenCalledWith(userId);
+      expect(
+        subscriptionsService.createSubscriptionForUser,
+      ).toHaveBeenCalledWith(userId);
     });
   });
 
@@ -70,15 +79,19 @@ describe('SubscriptionsController', () => {
       const addMembershipDto = { membershipId: 'mem-123' };
       const expectedResult = mockSubscription;
 
-      mockSubscriptionsService.addMembershipToSubscription.mockResolvedValue(expectedResult);
+      mockSubscriptionsService.addMembershipToSubscription.mockResolvedValue(
+        expectedResult,
+      );
 
-      const result = await controller.addMembership(subscriptionId, addMembershipDto);
-
-      expect(result).toEqual(expectedResult);
-      expect(subscriptionsService.addMembershipToSubscription).toHaveBeenCalledWith(
+      const result = await controller.addMembership(
         subscriptionId,
         addMembershipDto,
       );
+
+      expect(result).toEqual(expectedResult);
+      expect(
+        subscriptionsService.addMembershipToSubscription,
+      ).toHaveBeenCalledWith(subscriptionId, addMembershipDto);
     });
   });
 
@@ -113,14 +126,23 @@ describe('SubscriptionsController', () => {
     it('should update subscription', async () => {
       const subscriptionId = 'sub-123';
       const updateSubscriptionDto = { name: 'Updated Subscription' };
-      const expectedResult = { ...mockSubscription, name: 'Updated Subscription' };
+      const expectedResult = {
+        ...mockSubscription,
+        name: 'Updated Subscription',
+      };
 
       mockSubscriptionsService.update.mockResolvedValue(expectedResult);
 
-      const result = await controller.update(subscriptionId, updateSubscriptionDto);
+      const result = await controller.update(
+        subscriptionId,
+        updateSubscriptionDto,
+      );
 
       expect(result).toEqual(expectedResult);
-      expect(subscriptionsService.update).toHaveBeenCalledWith(subscriptionId, updateSubscriptionDto);
+      expect(subscriptionsService.update).toHaveBeenCalledWith(
+        subscriptionId,
+        updateSubscriptionDto,
+      );
     });
   });
 

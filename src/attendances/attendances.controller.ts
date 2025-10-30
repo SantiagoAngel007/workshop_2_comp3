@@ -18,7 +18,13 @@ import { GetUser } from '../auth/decorators/get-user.decorator';
 import { ValidRoles } from '../auth/enums/roles.enum';
 import { User } from '../auth/entities/users.entity';
 import { CheckOutDto } from './dto/check-out.dto';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('attendances')
 @ApiBearerAuth()
@@ -34,7 +40,11 @@ export class AttendancesController {
   @Auth(ValidRoles.receptionist)
   @ApiOperation({ summary: 'Register a user check-in (Receptionist only)' })
   @ApiResponse({ status: 201, description: 'Check-in successful.' })
-  @ApiResponse({ status: 400, description: 'Bad Request. User may already be checked in or has no active subscription.' })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Bad Request. User may already be checked in or has no active subscription.',
+  })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   checkIn(
     @Body() createAttendanceDto: CreateAttendanceDto,
@@ -54,7 +64,10 @@ export class AttendancesController {
   @Auth(ValidRoles.receptionist)
   @ApiOperation({ summary: 'Register a user check-out (Receptionist only)' })
   @ApiResponse({ status: 200, description: 'Check-out successful.' })
-  @ApiResponse({ status: 400, description: 'Bad Request. User is not currently checked in.' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request. User is not currently checked in.',
+  })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   checkOutByReceptionist(@Body() checkOutDto: CheckOutDto) {
     return this.attendanceService.checkOut(checkOutDto.userId);
@@ -65,7 +78,9 @@ export class AttendancesController {
    */
   @Get('status/:userId')
   @Auth(ValidRoles.admin)
-  @ApiOperation({ summary: "Get a user's current attendance status (Admin only)" })
+  @ApiOperation({
+    summary: "Get a user's current attendance status (Admin only)",
+  })
   @ApiParam({ name: 'userId', description: 'The UUID of the user' })
   @ApiResponse({ status: 200, description: "User's current status." })
   @ApiResponse({ status: 404, description: 'User not found.' })
@@ -98,7 +113,10 @@ export class AttendancesController {
   @Auth(ValidRoles.admin)
   @ApiOperation({ summary: "Get a user's attendance statistics (Admin only)" })
   @ApiParam({ name: 'userId', description: 'The UUID of the user' })
-  @ApiResponse({ status: 200, description: 'Attendance statistics for the user.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Attendance statistics for the user.',
+  })
   @ApiResponse({ status: 404, description: 'User not found.' })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   getStats(@Param('userId', ParseUUIDPipe) userId: string) {
@@ -111,7 +129,10 @@ export class AttendancesController {
   @Get('active')
   @Auth(ValidRoles.admin)
   @ApiOperation({ summary: 'Get all users currently checked-in (Admin only)' })
-  @ApiResponse({ status: 200, description: 'A list of active attendance records.' })
+  @ApiResponse({
+    status: 200,
+    description: 'A list of active attendance records.',
+  })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   getAllActive() {
     return this.attendanceService.getActiveAttendances();

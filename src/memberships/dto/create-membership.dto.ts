@@ -28,7 +28,8 @@ export class CreateMembershipDto {
   cost: number;
 
   @ApiProperty({
-    description: 'The maximum number of classes a member can attend with this plan',
+    description:
+      'The maximum number of classes a member can attend with this plan',
     example: 10,
   })
   @IsInt()
@@ -44,7 +45,8 @@ export class CreateMembershipDto {
   max_gym_assistance: number;
 
   @ApiProperty({
-    description: 'The duration of the membership in months. Must be 1 (monthly) or 12 (yearly).',
+    description:
+      'The duration of the membership in months. Must be 1 (monthly) or 12 (yearly).',
     example: 1,
   })
   @IsInt()

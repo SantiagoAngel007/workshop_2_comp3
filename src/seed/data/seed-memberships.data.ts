@@ -49,4 +49,3 @@ export const membershipsSeedData: SeedMembership[] = [
     duration_months: 12,
   },
 ];
-

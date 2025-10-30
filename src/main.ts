@@ -4,9 +4,8 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { Logger, ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-
   const logger = new Logger('Bootstrap');
-  
+
   const app = await NestFactory.create(AppModule);
 
   const config = new DocumentBuilder()
@@ -48,7 +47,6 @@ async function bootstrap() {
   logger.log(`Application is running on: http://localhost:${port}`);
   logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.log(`Database: ${process.env.DB_HOST || 'localhost'}`);
-  
 }
 
 void bootstrap();

@@ -42,6 +42,10 @@ export class Membership {
   @DeleteDateColumn()
   deleted_at: Date;
 
-  @ManyToMany(() => SubscriptionEntity, (subscription) => subscription.memberships, { eager: false })
+  @ManyToMany(
+    () => SubscriptionEntity,
+    (subscription) => subscription.memberships,
+    { eager: false },
+  )
   subscriptions: Subscription[];
 }

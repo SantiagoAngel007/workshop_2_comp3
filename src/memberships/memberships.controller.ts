@@ -15,7 +15,12 @@ import { CreateMembershipDto } from './dto/create-membership.dto';
 import { UpdateMembershipDto } from './dto/update-membership.dto';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { ValidRoles } from '../auth/enums/roles.enum';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('memberships')
 @ApiBearerAuth()
@@ -44,12 +49,14 @@ export class MembershipsController {
     return await this.membershipsService.findMembershipById(id);
   }
 
-
   @Post()
   @Auth(ValidRoles.admin)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new membership' })
-  @ApiResponse({ status: 201, description: 'The membership has been successfully created.' })
+  @ApiResponse({
+    status: 201,
+    description: 'The membership has been successfully created.',
+  })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
   @ApiResponse({ status: 403, description: 'Forbidden. Unauthorized role.' })
   async create(@Body() createMembershipDto: CreateMembershipDto) {
@@ -58,12 +65,14 @@ export class MembershipsController {
     );
   }
 
-
   @Put(':id')
   @Auth(ValidRoles.admin)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update an existing membership by its ID' })
-  @ApiResponse({ status: 200, description: 'The membership has been successfully updated.' })
+  @ApiResponse({
+    status: 200,
+    description: 'The membership has been successfully updated.',
+  })
   @ApiResponse({ status: 404, description: 'Membership not found.' })
   @ApiResponse({ status: 400, description: 'Invalid input data.' })
   @ApiResponse({ status: 403, description: 'Forbidden. Unauthorized role.' })
@@ -81,7 +90,10 @@ export class MembershipsController {
   @Auth(ValidRoles.admin)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Activate or deactivate a membership status' })
-  @ApiResponse({ status: 200, description: 'The membership status has been changed.' })
+  @ApiResponse({
+    status: 200,
+    description: 'The membership status has been changed.',
+  })
   @ApiResponse({ status: 404, description: 'Membership not found.' })
   @ApiResponse({ status: 403, description: 'Forbidden. Unauthorized role.' })
   async toggleStatus(@Param('id') id: string) {
@@ -92,7 +104,10 @@ export class MembershipsController {
   @Auth(ValidRoles.admin)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a membership by its ID' })
-  @ApiResponse({ status: 204, description: 'The membership has been successfully deleted.' })
+  @ApiResponse({
+    status: 204,
+    description: 'The membership has been successfully deleted.',
+  })
   @ApiResponse({ status: 404, description: 'Membership not found.' })
   @ApiResponse({ status: 403, description: 'Forbidden. Unauthorized role.' })
   async remove(@Param('id') id: string) {

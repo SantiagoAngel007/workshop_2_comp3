@@ -40,7 +40,7 @@ export const mockRole = {
 export const mockMembership = {
   id: '123e4567-e89b-12d3-a456-426614174002',
   name: 'Basic Membership',
-  cost: 50.00,
+  cost: 50.0,
   status: true,
   max_classes_assistance: 10,
   max_gym_assistance: 30,
@@ -53,7 +53,7 @@ export const mockMembership = {
 export const mockSubscription = {
   id: '123e4567-e89b-12d3-a456-426614174003',
   name: 'Basic Subscription',
-  cost: 50.00,
+  cost: 50.0,
   max_classes_assistance: 10,
   max_gym_assistance: 30,
   duration_months: 1,

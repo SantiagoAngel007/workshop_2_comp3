@@ -47,12 +47,18 @@ export class Subscription {
   @DeleteDateColumn()
   deleted_at: Date;
 
-  @ManyToOne(() => UserEntity, (user) => user.subscriptions, { onDelete: 'CASCADE' })
+  @ManyToOne(() => UserEntity, (user) => user.subscriptions, {
+    onDelete: 'CASCADE',
+  })
   user: User;
 
-  @ManyToMany(() => MembershipEntity, (membership) => membership.subscriptions, {
-    eager: false,
-  })
+  @ManyToMany(
+    () => MembershipEntity,
+    (membership) => membership.subscriptions,
+    {
+      eager: false,
+    },
+  )
   @JoinTable({
     name: 'subscription_memberships',
     joinColumn: { name: 'subscriptionId', referencedColumnName: 'id' },

@@ -31,9 +31,7 @@ describe('AppController (e2e)', () => {
 
   describe('Health Check', () => {
     it('should respond to health check', () => {
-      return request(app.getHttpServer())
-        .get('/')
-        .expect(200);
+      return request(app.getHttpServer()).get('/').expect(200);
     });
   });
 

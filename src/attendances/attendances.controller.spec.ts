@@ -47,7 +47,9 @@ describe('AttendancesController', () => {
       const result = await controller.checkIn(createAttendanceDto);
 
       expect(result).toEqual(expectedResult);
-      expect(attendancesService.checkIn).toHaveBeenCalledWith(createAttendanceDto);
+      expect(attendancesService.checkIn).toHaveBeenCalledWith(
+        createAttendanceDto,
+      );
     });
   });
 
@@ -70,12 +72,16 @@ describe('AttendancesController', () => {
       const userId = 'user-123';
       const expectedResult = { gym: 25, classes: 5 };
 
-      mockAttendancesService.getAvailableAttendances.mockResolvedValue(expectedResult);
+      mockAttendancesService.getAvailableAttendances.mockResolvedValue(
+        expectedResult,
+      );
 
       const result = await controller.getAvailableAttendances(userId);
 
       expect(result).toEqual(expectedResult);
-      expect(attendancesService.getAvailableAttendances).toHaveBeenCalledWith(userId);
+      expect(attendancesService.getAvailableAttendances).toHaveBeenCalledWith(
+        userId,
+      );
     });
   });
 
@@ -88,12 +94,16 @@ describe('AttendancesController', () => {
       };
       const expectedResult = [mockAttendance];
 
-      mockAttendancesService.getAttendanceHistory.mockResolvedValue(expectedResult);
+      mockAttendancesService.getAttendanceHistory.mockResolvedValue(
+        expectedResult,
+      );
 
       const result = await controller.getAttendanceHistory(getHistoryDto);
 
       expect(result).toEqual(expectedResult);
-      expect(attendancesService.getAttendanceHistory).toHaveBeenCalledWith(getHistoryDto);
+      expect(attendancesService.getAttendanceHistory).toHaveBeenCalledWith(
+        getHistoryDto,
+      );
     });
   });
 
@@ -106,12 +116,16 @@ describe('AttendancesController', () => {
         thisWeek: 2,
       };
 
-      mockAttendancesService.getAttendanceStats.mockResolvedValue(expectedResult);
+      mockAttendancesService.getAttendanceStats.mockResolvedValue(
+        expectedResult,
+      );
 
       const result = await controller.getAttendanceStats(userId);
 
       expect(result).toEqual(expectedResult);
-      expect(attendancesService.getAttendanceStats).toHaveBeenCalledWith(userId);
+      expect(attendancesService.getAttendanceStats).toHaveBeenCalledWith(
+        userId,
+      );
     });
   });
 });
