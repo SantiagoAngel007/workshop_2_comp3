@@ -1,11 +1,11 @@
 name: CI Pipeline
 
-# Se ejecuta en push a main/develop y en todos los PRs
+# Se ejecuta en push a main/develop/dev y en todos los PRs
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, dev]
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, dev]
 
 jobs:
   # Job 1: Validar código y pruebas
@@ -34,32 +34,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Setup de Node.js
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      # 2. Setup de Bun
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: '20'
-          cache: 'npm'
+          bun-version: latest
 
       # 3. Instalar dependencias
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       # 4. Linter (ESLint)
       - name: Run ESLint
-        run: npm run lint
+        run: bun run lint
 
       # 5. Formateo (Prettier check)
       - name: Check code formatting
-        run: npx prettier --check "src/**/*.ts" "test/**/*.ts"
+        run: bun x prettier --check "src/**/*.ts" "test/**/*.ts"
 
       # 6. Build del proyecto
       - name: Build project
-        run: npm run build
+        run: bun run build
 
       # 7. Ejecutar pruebas unitarias con coverage
       - name: Run unit tests with coverage
-        run: npm run test:cov
+        run: bun run test:cov
         env:
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
@@ -68,48 +67,157 @@ jobs:
           POSTGRES_DB: test_db
           JWT_SECRET: test-jwt-secret-key-for-ci
 
-      # 8. Mostrar reporte de cobertura en los logs
-      - name: Display coverage report
-        if: always()
+      # 8. Validar umbrales de cobertura
+      - name: Validate coverage thresholds
         run: |
           echo "============================================"
-          echo "COVERAGE REPORT"
+          echo "VALIDATING COVERAGE THRESHOLDS"
           echo "============================================"
+          
+          if [ ! -f coverage/coverage-summary.json ]; then
+            echo "❌ Coverage summary not found!"
+            exit 1
+          fi
+          
+          # Extraer métricas de cobertura
+          STATEMENTS=$(cat coverage/coverage-summary.json | node -e "console.log(JSON.parse(require('fs').readFileSync(0, 'utf-8')).total.statements.pct)")
+          BRANCHES=$(cat coverage/coverage-summary.json | node -e "console.log(JSON.parse(require('fs').readFileSync(0, 'utf-8')).total.branches.pct)")
+          FUNCTIONS=$(cat coverage/coverage-summary.json | node -e "console.log(JSON.parse(require('fs').readFileSync(0, 'utf-8')).total.functions.pct)")
+          LINES=$(cat coverage/coverage-summary.json | node -e "console.log(JSON.parse(require('fs').readFileSync(0, 'utf-8')).total.lines.pct)")
+          
+          echo "📊 Coverage Results:"
+          echo "   Statements: ${STATEMENTS}% (required: ≥85%)"
+          echo "   Branches:   ${BRANCHES}% (required: ≥83%)"
+          echo "   Functions:  ${FUNCTIONS}% (required: ≥85%)"
+          echo "   Lines:      ${LINES}% (required: ≥85%)"
+          echo ""
+          
+          # Validar umbrales
+          FAILED=false
+          
+          if (( $(echo "$STATEMENTS < 85" | bc -l) )); then
+            echo "❌ Statements coverage is below 85% (${STATEMENTS}%)"
+            FAILED=true
+          else
+            echo "✅ Statements coverage passed"
+          fi
+          
+          if (( $(echo "$BRANCHES < 83" | bc -l) )); then
+            echo "❌ Branches coverage is below 83% (${BRANCHES}%)"
+            FAILED=true
+          else
+            echo "✅ Branches coverage passed"
+          fi
+          
+          if (( $(echo "$FUNCTIONS < 85" | bc -l) )); then
+            echo "❌ Functions coverage is below 85% (${FUNCTIONS}%)"
+            FAILED=true
+          else
+            echo "✅ Functions coverage passed"
+          fi
+          
+          if (( $(echo "$LINES < 85" | bc -l) )); then
+            echo "❌ Lines coverage is below 85% (${LINES}%)"
+            FAILED=true
+          else
+            echo "✅ Lines coverage passed"
+          fi
+          
+          if [ "$FAILED" = true ]; then
+            echo ""
+            echo "💥 Coverage validation FAILED! Please improve test coverage."
+            exit 1
+          else
+            echo ""
+            echo "🎉 All coverage thresholds passed!"
+          fi
+
+      # 9. Mostrar reporte detallado de cobertura
+      - name: Display detailed coverage report
+        if: always()
+        run: |
+          echo ""
+          echo "============================================"
+          echo "DETAILED COVERAGE REPORT"
+          echo "============================================"
+          echo ""
+          echo "📄 Coverage by file (top 20 files):"
+          echo "─────────────────────────────────────────"
+          if [ -f coverage/lcov-report/index.html ]; then
+            echo "Full HTML report generated at: coverage/lcov-report/index.html"
+          fi
+          
+          # Mostrar archivos con menor cobertura
           if [ -f coverage/coverage-summary.json ]; then
+            echo ""
+            echo "📉 Files with lowest branch coverage:"
             cat coverage/coverage-summary.json | node -e "
               const data = JSON.parse(require('fs').readFileSync(0, 'utf-8'));
-              const total = data.total;
-              console.log('');
-              console.log('Overall Coverage Summary:');
-              console.log('─────────────────────────────────────────');
-              console.log('Lines      : ' + total.lines.pct + '%');
-              console.log('Statements : ' + total.statements.pct + '%');
-              console.log('Functions  : ' + total.functions.pct + '%');
-              console.log('Branches   : ' + total.branches.pct + '%');
-              console.log('─────────────────────────────────────────');
+              const files = Object.entries(data)
+                .filter(([key]) => key !== 'total')
+                .map(([file, stats]) => ({ file: file.replace(process.cwd() + '/', ''), branches: stats.branches.pct }))
+                .sort((a, b) => a.branches - b.branches)
+                .slice(0, 10);
+              
+              files.forEach(({file, branches}) => {
+                const status = branches < 83 ? '❌' : branches < 90 ? '⚠️' : '✅';
+                console.log(\`\${status} \${branches}% - \${file}\`);
+              });
             "
           fi
-          echo ""
-          echo "Detailed Coverage by File:"
-          echo "─────────────────────────────────────────"
-          cat coverage/lcov.info | grep -E "(SF:|DA:)" | head -50 || echo "No detailed coverage available"
-          echo "─────────────────────────────────────────"
-          echo ""
-          echo "Full coverage report available in: coverage/lcov-report/index.html"
 
-      # 9. Subir reporte de cobertura como artefacto
+      # 10. Subir reporte de cobertura como artefacto
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: coverage-report
+          name: coverage-report-${{ github.run_number }}
           path: coverage/
           retention-days: 30
+
+      # 11. Comentar resultados en PR (si es un PR)
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            if (!fs.existsSync('coverage/coverage-summary.json')) {
+              return;
+            }
+            
+            const coverage = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+            const total = coverage.total;
+            
+            const comment = `## 📊 Coverage Report
+            
+            | Metric | Percentage | Status |
+            |--------|------------|--------|
+            | Statements | ${total.statements.pct}% | ${total.statements.pct >= 85 ? '✅' : '❌'} |
+            | Branches | ${total.branches.pct}% | ${total.branches.pct >= 83 ? '✅' : '❌'} |
+            | Functions | ${total.functions.pct}% | ${total.functions.pct >= 85 ? '✅' : '❌'} |
+            | Lines | ${total.lines.pct}% | ${total.lines.pct >= 85 ? '✅' : '❌'} |
+            
+            **Minimum thresholds:** Statements ≥85%, Branches ≥83%, Functions ≥85%, Lines ≥85%
+            
+            ${total.statements.pct >= 85 && total.branches.pct >= 83 && total.functions.pct >= 85 && total.lines.pct >= 85 
+              ? '🎉 All coverage thresholds passed!' 
+              : '⚠️ Some coverage thresholds not met. Please add more tests.'}
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
 
   # Job 2: Validar Docker build (opcional)
   docker:
     name: Docker Build Check
     runs-on: ubuntu-latest
+    needs: test # Solo ejecutar si las pruebas pasan
 
     steps:
       - name: Checkout code
@@ -127,3 +235,36 @@ jobs:
       - name: Build Docker image
         if: steps.check_dockerfile.outputs.exists == 'true'
         run: docker build -t workshop-app:test .
+
+  # Job 3: Verificación de seguridad básica
+  security:
+    name: Security Check
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run security audit
+        run: |
+          echo "🔒 Running security audit..."
+          bun audit || echo "⚠️ Security vulnerabilities found, but not blocking CI"
+
+      - name: Check for secrets in code
+        run: |
+          echo "🔍 Checking for potential secrets..."
+          if grep -r -i "password\|secret\|key\|token" src/ --include="*.ts" --exclude-dir=node_modules | grep -v "PASSWORD\|SECRET\|KEY\|TOKEN" | grep -E "(=|:)" | head -5; then
+            echo "⚠️ Potential secrets found in code. Please review."
+            echo "Note: This is just a warning, CI will continue."
+          else
+            echo "✅ No obvious secrets found in source code."
+          fi

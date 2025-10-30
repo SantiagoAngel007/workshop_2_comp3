@@ -1,0 +1,124 @@
+name: Branch Protection
+
+# Este workflow se ejecuta solo en push a main para validaciones adicionales
+on:
+  push:
+    branches: [main]
+
+jobs:
+  # Verificar que el push viene de un merge de PR
+  validate-merge:
+    name: Validate Merge Source
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if push is from PR merge
+        run: |
+          echo "🔍 Validating merge source..."
+          
+          # Obtener el mensaje del commit
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MSG"
+          
+          # Verificar si es un merge commit
+          if git log -1 --merges | grep -q commit; then
+            echo "✅ This is a merge commit"
+          else
+            echo "ℹ️ This is a direct push to main"
+            echo "⚠️ Consider using Pull Requests for better code review"
+          fi
+          
+          # Verificar el autor del commit
+          AUTHOR=$(git log -1 --pretty=%an)
+          echo "👤 Commit author: $AUTHOR"
+          
+          echo "🎯 Push to main branch validated"
+
+  # Verificar que las pruebas siguen pasando después del merge
+  post-merge-validation:
+    name: Post-Merge Validation
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run full test suite
+        run: bun run test:cov
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+          JWT_SECRET: test-jwt-secret-key-for-ci
+
+      - name: Validate main branch health
+        run: |
+          echo "🏥 Main branch health check..."
+          
+          if [ -f coverage/coverage-summary.json ]; then
+            STATEMENTS=$(cat coverage/coverage-summary.json | node -e "console.log(JSON.parse(require('fs').readFileSync(0, 'utf-8')).total.statements.pct)")
+            BRANCHES=$(cat coverage/coverage-summary.json | node -e "console.log(JSON.parse(require('fs').readFileSync(0, 'utf-8')).total.branches.pct)")
+            FUNCTIONS=$(cat coverage/coverage-summary.json | node -e "console.log(JSON.parse(require('fs').readFileSync(0, 'utf-8')).total.functions.pct)")
+            LINES=$(cat coverage/coverage-summary.json | node -e "console.log(JSON.parse(require('fs').readFileSync(0, 'utf-8')).total.lines.pct)")
+            
+            echo "📊 Main Branch Coverage:"
+            echo "   Statements: ${STATEMENTS}%"
+            echo "   Branches:   ${BRANCHES}%"
+            echo "   Functions:  ${FUNCTIONS}%"
+            echo "   Lines:      ${LINES}%"
+            
+            if (( $(echo "$STATEMENTS >= 85 && $BRANCHES >= 83 && $FUNCTIONS >= 85 && $LINES >= 85" | bc -l) )); then
+              echo "✅ Main branch maintains excellent test coverage!"
+            else
+              echo "⚠️ Main branch coverage has degraded. This should be investigated."
+            fi
+          fi
+
+      - name: Create release tag (if version changed)
+        run: |
+          echo "🏷️ Checking for version changes..."
+          
+          # Obtener la versión actual del package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Verificar si ya existe un tag para esta versión
+          if git tag -l | grep -q "^v$CURRENT_VERSION$"; then
+            echo "Tag v$CURRENT_VERSION already exists"
+          else
+            echo "Creating new tag v$CURRENT_VERSION"
+            git config user.name "GitHub Actions"
+            git config user.email "actions@github.com"
+            git tag -a "v$CURRENT_VERSION" -m "Release version $CURRENT_VERSION"
+            git push origin "v$CURRENT_VERSION" || echo "Could not push tag (this is normal if no permissions)"
+          fi
