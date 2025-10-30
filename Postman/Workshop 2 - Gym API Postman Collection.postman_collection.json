@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "4b4570a7-71b9-46c3-8888-70dca1d17ba6",
-		"name": "Workshop 2 - Gym API (Con Auth Update Logic)",
+		"name": "Workshop 2 - Gym API Postman Collection",
 		"description": "API para pruebas con nueva lógica de autorización en UPDATE USER",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "44658492"
@@ -574,7 +574,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"juan7@example.com\",\n  \"fullName\": \"Juan Perez siete\",\n  \"age\": 28,\n  \"password\": \"password123\"\n}",
+							"raw": "{\n  \"email\": \"juan8@example.com\",\n  \"fullName\": \"Juan Perez ocho\",\n  \"age\": 28,\n  \"password\": \"password123\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -651,7 +651,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijc5MmNmODEyLWNjOGYtNGVhZS1iZjA3LTNiNWYwOTQ3ZmNiMyIsImVtYWlsIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJpYXQiOjE3NjE0MDk2NTQsImV4cCI6MTc2MTQxMzI1NH0.mJNqdTb7-Z5SV1sFWUKdZm5JhmiEXU1uK5DCnARgiGM",
+									"value": "{{admin_token}}",
 									"type": "string"
 								}
 							]
@@ -674,7 +674,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://localhost:3000/subscriptions/e288c0b9-20d6-4c57-9f83-07bb61fd3e85",
+							"raw": "http://localhost:3000/subscriptions/{{user_subscription_id}}",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -682,7 +682,7 @@
 							"port": "3000",
 							"path": [
 								"subscriptions",
-								"e288c0b9-20d6-4c57-9f83-07bb61fd3e85"
+								"{{user_subscription_id}}"
 							]
 						}
 					},
@@ -696,7 +696,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijc5MmNmODEyLWNjOGYtNGVhZS1iZjA3LTNiNWYwOTQ3ZmNiMyIsImVtYWlsIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJpYXQiOjE3NjE0MDk2NTQsImV4cCI6MTc2MTQxMzI1NH0.mJNqdTb7-Z5SV1sFWUKdZm5JhmiEXU1uK5DCnARgiGM",
+									"value": "{{admin_token}}",
 									"type": "string"
 								}
 							]
@@ -704,7 +704,7 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:3000/subscriptions/e288c0b9-20d6-4c57-9f83-07bb61fd3e85",
+							"raw": "http://localhost:3000/subscriptions/{{user_subscription_id}}",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -712,7 +712,7 @@
 							"port": "3000",
 							"path": [
 								"subscriptions",
-								"e288c0b9-20d6-4c57-9f83-07bb61fd3e85"
+								"{{user_subscription_id}}"
 							]
 						}
 					},
@@ -726,7 +726,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijc5MmNmODEyLWNjOGYtNGVhZS1iZjA3LTNiNWYwOTQ3ZmNiMyIsImVtYWlsIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJpYXQiOjE3NjE0MDk2NTQsImV4cCI6MTc2MTQxMzI1NH0.mJNqdTb7-Z5SV1sFWUKdZm5JhmiEXU1uK5DCnARgiGM",
+									"value": "{{admin_token}}",
 									"type": "string"
 								}
 							]
@@ -755,7 +755,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijc5MmNmODEyLWNjOGYtNGVhZS1iZjA3LTNiNWYwOTQ3ZmNiMyIsImVtYWlsIjoiYWRtaW5AZXhhbXBsZS5jb20iLCJpYXQiOjE3NjE0MDk2NTQsImV4cCI6MTc2MTQxMzI1NH0.mJNqdTb7-Z5SV1sFWUKdZm5JhmiEXU1uK5DCnARgiGM",
+									"value": "{{admin_token}}",
 									"type": "string"
 								}
 							]
@@ -763,7 +763,7 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "http://localhost:3000/subscriptions/e288c0b9-20d6-4c57-9f83-07bb61fd3e85",
+							"raw": "http://localhost:3000/subscriptions/{{user_subscription_id}}",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -771,7 +771,7 @@
 							"port": "3000",
 							"path": [
 								"subscriptions",
-								"e288c0b9-20d6-4c57-9f83-07bb61fd3e85"
+								"{{user_subscription_id}}"
 							]
 						}
 					},
@@ -818,8 +818,81 @@
 					"response": []
 				},
 				{
+					"name": "Crear Nueva Membresía",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('membership_id', jsonData.id);",
+									"    console.log('✅ Membership ID guardado: ' + jsonData.id);",
+									"    // Línea de depuración para leer el valor inmediatamente",
+									"    var savedId = pm.collectionVariables.get('membership_id');",
+									"    console.log('✅ Valor leído de la variable de colección: ' + savedId);",
+									"}",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"membresia carb4\",\n  \"cost\": 99.99,\n  \"max_classes_assistance\": 13,\n  \"max_gym_assistance\": 21,\n  \"duration_months\": 12,\n  \"status\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/memberships",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"memberships"
+							]
+						},
+						"description": "Crea una nueva membresía. Solo admin puede crear"
+					},
+					"response": []
+				},
+				{
 					"name": "Ver Membresía por ID",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [
 							{
@@ -843,55 +916,6 @@
 					"response": []
 				},
 				{
-					"name": "Crear Nueva Membresía",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"if (pm.response.code === 201) {",
-									"    var jsonData = pm.response.json();",
-									"    pm.collectionVariables.set('membership_id', jsonData.id);",
-									"    console.log('✅ Membership ID guardado: ' + jsonData.id);",
-									"}"
-								],
-								"type": "text/javascript",
-								"packages": {},
-								"requests": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{admin_token}}",
-								"type": "text"
-							},
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"name\": \"membresia carb\",\n  \"cost\": 99.99,\n  \"max_classes_assistance\": 13,\n  \"max_gym_assistance\": 21,\n  \"duration_months\": 12,\n  \"status\": true\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/memberships",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"memberships"
-							]
-						},
-						"description": "Crea una nueva membresía. Solo admin puede crear"
-					},
-					"response": []
-				},
-				{
 					"name": "Actualizar Membresía",
 					"request": {
 						"method": "PUT",
@@ -908,7 +932,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"name\": \"Básica Mensual Actualizada\",\n  \"cost\": 54.00,\n  \"max_classes_assistance\": 10\n}"
+							"raw": "{\n  \"name\": \"Actualizada\",\n  \"cost\": 54.00,\n  \"max_classes_assistance\": 10\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/memberships/{{membership_id}}",
@@ -927,6 +951,16 @@
 				{
 					"name": "Toggle Status (Activar/Desactivar)",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "PATCH",
 						"header": [
 							{
@@ -953,6 +987,16 @@
 				{
 					"name": "Eliminar Membresía (Soft Delete)",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "DELETE",
 						"header": [
 							{
@@ -1053,7 +1097,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"type\": \"gym\"\n}",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"entranceDatetime\": \"{{$isoTimestamp}}\",\n  \"type\": \"gym\",\n  \"dateKey\": \"{{$today}}\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1372,6 +1416,10 @@
 		},
 		{
 			"key": "user_subscription_id",
+			"value": ""
+		},
+		{
+			"key": "i",
 			"value": ""
 		}
 	]
