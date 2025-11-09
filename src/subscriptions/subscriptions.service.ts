@@ -81,12 +81,11 @@ export class SubscriptionsService {
       );
     }
 
-    // Crear nueva subscripción vacía (sin membresías inicialmente)
+    // Crear nueva subscripción vacía (sin items inicialmente)
     const newSubscription = this.subscriptionRepository.create({
       start_date: new Date(),
       isActive: true,
       user,
-      memberships: [],
     });
 
     return await this.subscriptionRepository.save(newSubscription);
@@ -121,8 +120,8 @@ export class SubscriptionsService {
       throw new NotFoundException('Subscription not found');
     }
 
-    // Buscar si ya tiene una membresía activa
-    const activeMembership = await this.subscriptionItemRepository.findOne({
+    // Buscar si ya tiene un item activo
+    const activeItem = await this.subscriptionItemRepository.findOne({
       where: {
         subscription: { id: subscriptionId },
         status: SubscriptionItemStatus.ACTIVE,
@@ -135,15 +134,15 @@ export class SubscriptionsService {
     let endDate: Date;
     let status: SubscriptionItemStatus;
 
-    if (!activeMembership) {
-      // CASO 1: No tiene membresía activa - Activar inmediatamente
+    if (!activeItem) {
+      // CASO 1: No tiene item activo - Activar inmediatamente
       startDate = today;
       endDate = this.addMonths(today, membership.duration_months);
       status = SubscriptionItemStatus.ACTIVE;
     } else {
-      // CASO 2: Ya tiene una activa - Programar para después
-      startDate = activeMembership.end_date;
-      endDate = this.addMonths(activeMembership.end_date, membership.duration_months);
+      // CASO 2: Ya tiene uno activo - Programar para después
+      startDate = activeItem.end_date;
+      endDate = this.addMonths(activeItem.end_date, membership.duration_months);
       status = SubscriptionItemStatus.PENDING;
     }
 
@@ -227,7 +226,7 @@ export class SubscriptionsService {
 
     console.log(`[CRON] Checking for expired memberships at ${today.toISOString()}`);
 
-    // Buscar membresías activas que ya expiraron
+    // Buscar items activos que ya expiraron
     const expiredItems = await this.subscriptionItemRepository.find({
       where: {
         status: SubscriptionItemStatus.ACTIVE,

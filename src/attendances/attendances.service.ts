@@ -16,6 +16,7 @@ import {
   AttendanceStatsResponse,
 } from './dto/attendance-response.dto';
 import { GetHistoryDto } from './dto/get-history.dto';
+import { SubscriptionItemStatus } from '../subscriptions/entities/subscription-item.entity';
 
 @Injectable()
 export class AttendancesService {
@@ -228,22 +229,25 @@ export class AttendancesService {
   private async calculateAvailableAttendances(
     userId: string,
   ): Promise<AvailableAttendances> {
-    // 1. Encontrar la suscripción activa del usuario y cargar sus membresías
+    // 1. Encontrar la suscripción activa del usuario y cargar sus items
     const activeSubscription = await this.subscriptionRepository.findOne({
       where: { user: { id: userId }, isActive: true },
-      relations: ['memberships'], // Clave para cargar las membresías asociadas
+      relations: ['items'], // <-- Cambiado de 'memberships' a 'items'
     });
 
-    if (!activeSubscription || !activeSubscription.memberships?.length) {
-      return { gym: 0, classes: 0 }; // No tiene suscripción activa o membresías
+    if (!activeSubscription || !activeSubscription.items?.length) {
+      return { gym: 0, classes: 0 }; // No tiene suscripción activa o items
     }
 
-    // 2. Sumar los máximos pases de todas sus membresías
+    // 2. Sumar los máximos pases de todos sus items ACTIVOS
     let totalGym = 0;
     let totalClasses = 0;
-    activeSubscription.memberships.forEach((m) => {
-      totalGym += m.max_gym_assistance || 0;
-      totalClasses += m.max_classes_assistance || 0;
+    activeSubscription.items.forEach((item) => { // <-- Cambiado de 'memberships' a 'items'
+      // Solo sumar si el item está activo
+      if(item.status === SubscriptionItemStatus.ACTIVE) { // <-- Añadido chequeo de estado
+        totalGym += item.max_gym_assistance || 0;
+        totalClasses += item.max_classes_assistance || 0;
+      }
     });
 
     // 3. Contar los pases usados en el mes actual
