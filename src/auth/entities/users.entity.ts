@@ -39,7 +39,7 @@ export class User {
   @OneToMany('Attendance', 'user', { eager: false })
   attendances: any[];
 
-  @ManyToMany(() => Role, { eager: false })
+  @ManyToMany(() => Role, { eager: false, cascade: true })
   @JoinTable({
     name: 'user_roles',
     joinColumn: { name: 'userId', referencedColumnName: 'id' },
