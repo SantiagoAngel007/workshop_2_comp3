@@ -436,4 +436,19 @@ export class AttendancesService {
       order: { entranceDatetime: 'DESC' },
     });
   }
+
+  /**
+   * Obtiene los asistentes registrados para una clase específica.
+   */
+  async getClassAttendees(classId: string): Promise<Attendance[]> {
+    // Buscar todas las asistencias de tipo CLASS para la clase dada
+    return this.attendanceRepository.find({
+      where: {
+        class: { id: classId },
+        type: AttendanceType.CLASS,
+      },
+      relations: ['user', 'class', 'coach'],
+      order: { entranceDatetime: 'DESC' },
+    });
+  }
 }

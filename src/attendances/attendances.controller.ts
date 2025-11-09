@@ -189,6 +189,20 @@ export class AttendancesController {
     return this.attendanceService.getCoachClasses(coach.id);
   }
 
+    /**
+     * Endpoint para obtener los asistentes registrados de una clase específica.
+     */
+    @Get('class/:classId/attendees')
+    @Auth(ValidRoles.coach, ValidRoles.admin)
+    @ApiOperation({ summary: 'Get attendees for a specific class' })
+    @ApiParam({ name: 'classId', description: 'The UUID of the class' })
+    @ApiResponse({ status: 200, description: 'A list of attendees for the class.' })
+    @ApiResponse({ status: 404, description: 'Class not found.' })
+    @ApiResponse({ status: 403, description: 'Forbidden.' })
+    getClassAttendees(@Param('classId', ParseUUIDPipe) classId: string) {
+      return this.attendanceService.getClassAttendees(classId);
+    }
+
   /**
    * Endpoint para ver todas las clases registradas hoy.
    */
