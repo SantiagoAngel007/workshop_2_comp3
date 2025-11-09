@@ -55,7 +55,7 @@ export class AuthController {
 
   @Get()
   @ApiBearerAuth()
-  @Auth(ValidRoles.admin)
+  @Auth(ValidRoles.admin, ValidRoles.receptionist)
   @ApiOperation({ summary: 'Get all users (Admin only)' })
   @ApiResponse({ status: 200, description: 'List of all users.' })
   @ApiResponse({ status: 403, description: 'Forbidden. Admin role required.' })
@@ -65,7 +65,7 @@ export class AuthController {
 
   @Get(':id')
   @ApiBearerAuth()
-  @Auth(ValidRoles.admin)
+  @Auth(ValidRoles.admin, ValidRoles.receptionist)
   @ApiOperation({ summary: 'Get a single user by ID (Admin only)' })
   @ApiParam({ name: 'id', description: 'The unique identifier of the user' })
   @ApiResponse({ status: 200, description: 'User found.' })

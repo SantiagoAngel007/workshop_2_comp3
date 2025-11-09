@@ -110,7 +110,7 @@ export class AttendancesController {
    * Obtiene las estadísticas de asistencia de un usuario.
    */
   @Get('stats/:userId')
-  @Auth(ValidRoles.admin, ValidRoles.client)
+  @Auth(ValidRoles.admin, ValidRoles.client, ValidRoles.receptionist)
   @ApiOperation({ summary: "Get a user's attendance statistics (Admin only)" })
   @ApiParam({ name: 'userId', description: 'The UUID of the user' })
   @ApiResponse({
@@ -127,7 +127,7 @@ export class AttendancesController {
    * Endpoint para que los administradores vean quién está actualmente en las instalaciones.
    */
   @Get('active')
-  @Auth(ValidRoles.admin)
+  @Auth(ValidRoles.admin, ValidRoles.receptionist)
   @ApiOperation({ summary: 'Get all users currently checked-in (Admin only)' })
   @ApiResponse({
     status: 200,
