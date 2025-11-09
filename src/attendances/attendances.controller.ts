@@ -77,7 +77,7 @@ export class AttendancesController {
    * Obtiene el estado actual de un usuario.
    */
   @Get('status/:userId')
-  @Auth(ValidRoles.admin)
+  @Auth(ValidRoles.admin, ValidRoles.client, ValidRoles.receptionist)
   @ApiOperation({
     summary: "Get a user's current attendance status (Admin only)",
   })
@@ -93,7 +93,7 @@ export class AttendancesController {
    * Obtiene el historial de asistencias de un usuario.
    */
   @Get('history/:userId')
-  @Auth(ValidRoles.admin)
+  @Auth(ValidRoles.admin, ValidRoles.client, ValidRoles.receptionist)
   @ApiOperation({ summary: "Get a user's attendance history (Admin only)" })
   @ApiParam({ name: 'userId', description: 'The UUID of the user' })
   @ApiResponse({ status: 200, description: 'A list of attendance records.' })
@@ -110,7 +110,7 @@ export class AttendancesController {
    * Obtiene las estadísticas de asistencia de un usuario.
    */
   @Get('stats/:userId')
-  @Auth(ValidRoles.admin)
+  @Auth(ValidRoles.admin, ValidRoles.client)
   @ApiOperation({ summary: "Get a user's attendance statistics (Admin only)" })
   @ApiParam({ name: 'userId', description: 'The UUID of the user' })
   @ApiResponse({

@@ -15,7 +15,7 @@ export class Subscription {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('date')
+  @Column('date', { default: () => 'CURRENT_DATE' })
   start_date: Date;
 
   @Column('bool', { default: true })
