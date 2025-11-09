@@ -7,11 +7,13 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { AttendancesModule } from './attendances/attendances.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { SeedModule } from './seed/seed.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
 
     TypeOrmModule.forRoot({
       type: 'postgres',

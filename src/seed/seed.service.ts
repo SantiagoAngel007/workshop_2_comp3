@@ -6,6 +6,8 @@ import { initialData } from './data/seed-auth.data';
 import { membershipsSeedData } from './data/seed-memberships.data';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Membership } from '../memberships/entities/membership.entity';
+import { Subscription } from '../subscriptions/entities/subscription.entity';
+import { SubscriptionItem, SubscriptionItemStatus } from '../subscriptions/entities/subscription-item.entity';
 import { Repository, DataSource } from 'typeorm';
 
 @Injectable()
@@ -15,6 +17,10 @@ export class SeedService {
     private readonly membershipsService: MembershipsService,
     @InjectRepository(Membership)
     private readonly membershipRepository: Repository<Membership>,
+    @InjectRepository(Subscription)
+    private readonly subscriptionRepository: Repository<Subscription>,
+    @InjectRepository(SubscriptionItem)
+    private readonly subscriptionItemRepository: Repository<SubscriptionItem>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -30,6 +36,7 @@ export class SeedService {
       await this.insertRoles();
       await this.insertUsers(); // Ahora crea usuarios + suscripciones automáticamente
       await this.insertMemberships();
+      await this.insertSubscriptionItems(); // Crear ejemplos de compras de membresías
 
       return 'SEED EXECUTED SUCCESSFULLY';
     } catch (error) {
@@ -187,6 +194,128 @@ export class SeedService {
       }
     } catch (error) {
       console.error('Error inserting memberships:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Crea SubscriptionItems de ejemplo para el usuario cliente
+   * Crea 4 membresías con diferentes estados: expired, active, pending, pending
+   */
+  private async insertSubscriptionItems() {
+    try {
+      // Buscar el usuario cliente
+      const clientUser = await this.authService.userRepository.findOne({
+        where: { email: 'client@example.com' },
+      });
+
+      if (!clientUser) {
+        console.log('⚠ Client user not found, skipping subscription items');
+        return;
+      }
+
+      // Buscar la suscripción del usuario
+      const subscription = await this.subscriptionRepository.findOne({
+        where: { user: { id: clientUser.id } },
+      });
+
+      if (!subscription) {
+        console.log('⚠ Subscription not found for client, skipping subscription items');
+        return;
+      }
+
+      // Buscar las membresías disponibles
+      const memberships = await this.membershipRepository.find();
+
+      if (memberships.length < 4) {
+        console.log('⚠ Not enough memberships to create subscription items');
+        return;
+      }
+
+      const today = new Date();
+
+      // Helper para sumar/restar meses
+      const addMonths = (date: Date, months: number): Date => {
+        const result = new Date(date);
+        result.setMonth(result.getMonth() + months);
+        return result;
+      };
+
+      // 1. Membresía EXPIRADA (comprada hace 2 meses, duración 1 mes)
+      const expiredMembership = memberships[0];
+      const expiredItem = this.subscriptionItemRepository.create({
+        subscription,
+        membership: expiredMembership,
+        name: expiredMembership.name,
+        cost: expiredMembership.cost,
+        max_classes_assistance: expiredMembership.max_classes_assistance,
+        max_gym_assistance: expiredMembership.max_gym_assistance,
+        duration_months: expiredMembership.duration_months,
+        purchase_date: addMonths(today, -2),
+        start_date: addMonths(today, -2),
+        end_date: addMonths(today, -1),
+        status: SubscriptionItemStatus.EXPIRED,
+      });
+      await this.subscriptionItemRepository.save(expiredItem);
+      console.log(`✓ Created EXPIRED subscription item: ${expiredMembership.name}`);
+
+      // 2. Membresía ACTIVA (comprada hace 1 mes, termina en 11 meses)
+      const activeMembership = memberships[1];
+      const activeItem = this.subscriptionItemRepository.create({
+        subscription,
+        membership: activeMembership,
+        name: activeMembership.name,
+        cost: activeMembership.cost,
+        max_classes_assistance: activeMembership.max_classes_assistance,
+        max_gym_assistance: activeMembership.max_gym_assistance,
+        duration_months: activeMembership.duration_months,
+        purchase_date: addMonths(today, -1),
+        start_date: addMonths(today, -1),
+        end_date: addMonths(today, 11),
+        status: SubscriptionItemStatus.ACTIVE,
+      });
+      await this.subscriptionItemRepository.save(activeItem);
+      console.log(`✓ Created ACTIVE subscription item: ${activeMembership.name}`);
+
+      // 3. Membresía PENDIENTE #1 (comienza cuando expire la activa)
+      const pending1Membership = memberships[2];
+      const pending1Item = this.subscriptionItemRepository.create({
+        subscription,
+        membership: pending1Membership,
+        name: pending1Membership.name,
+        cost: pending1Membership.cost,
+        max_classes_assistance: pending1Membership.max_classes_assistance,
+        max_gym_assistance: pending1Membership.max_gym_assistance,
+        duration_months: pending1Membership.duration_months,
+        purchase_date: today,
+        start_date: addMonths(today, 11),
+        end_date: addMonths(today, 11 + pending1Membership.duration_months),
+        status: SubscriptionItemStatus.PENDING,
+      });
+      await this.subscriptionItemRepository.save(pending1Item);
+      console.log(`✓ Created PENDING subscription item: ${pending1Membership.name}`);
+
+      // 4. Membresía PENDIENTE #2 (comienza después de la pendiente #1)
+      const pending2Membership = memberships[3];
+      const pending2Item = this.subscriptionItemRepository.create({
+        subscription,
+        membership: pending2Membership,
+        name: pending2Membership.name,
+        cost: pending2Membership.cost,
+        max_classes_assistance: pending2Membership.max_classes_assistance,
+        max_gym_assistance: pending2Membership.max_gym_assistance,
+        duration_months: pending2Membership.duration_months,
+        purchase_date: today,
+        start_date: addMonths(today, 11 + pending1Membership.duration_months),
+        end_date: addMonths(today, 11 + pending1Membership.duration_months + pending2Membership.duration_months),
+        status: SubscriptionItemStatus.PENDING,
+      });
+      await this.subscriptionItemRepository.save(pending2Item);
+      console.log(`✓ Created PENDING subscription item: ${pending2Membership.name}`);
+
+      console.log('✓ All subscription items created successfully');
+    } catch (error) {
+      console.error('Error inserting subscription items:', error.message);
       throw error;
     }
   }

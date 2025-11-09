@@ -1,14 +1,14 @@
 import {
   Column,
-  ManyToMany,
-  JoinTable,
   PrimaryGeneratedColumn,
   Entity,
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToMany,
   DeleteDateColumn
 } from 'typeorm';
+import { SubscriptionItem } from './subscription-item.entity';
 
 @Entity()
 export class Subscription {
@@ -30,13 +30,8 @@ export class Subscription {
   @ManyToOne('User', 'subscriptions', { onDelete: 'CASCADE' })
   user: any;
 
-  @ManyToMany('Membership', { eager: false })
-  @JoinTable({
-    name: 'subscription_memberships',
-    joinColumn: { name: 'subscriptionId', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'membershipId', referencedColumnName: 'id' },
-  })
-  memberships: any[];
+  @OneToMany(() => SubscriptionItem, (item) => item.subscription, { eager: false })
+  items: SubscriptionItem[];
 
   @DeleteDateColumn()
   deletedAt?: Date;
