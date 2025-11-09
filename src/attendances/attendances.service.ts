@@ -9,7 +9,9 @@ import { Repository, Between, MoreThanOrEqual } from 'typeorm';
 import { Attendance, AttendanceType } from './entities/attendance.entity';
 import { User } from '../auth/entities/users.entity';
 import { Subscription } from '../subscriptions/entities/subscription.entity';
+import { Class } from '../classes/entities/class.entity';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
+import { RegisterClassAttendanceDto } from './dto/register-class-attendance.dto';
 import {
   AttendanceStatus,
   AvailableAttendances,
@@ -30,6 +32,9 @@ export class AttendancesService {
     // Inyectamos Subscription para calcular los pases disponibles
     @InjectRepository(Subscription)
     private readonly subscriptionRepository: Repository<Subscription>,
+
+    @InjectRepository(Class)
+    private readonly classRepository: Repository<Class>,
   ) {}
 
   /**
@@ -344,5 +349,91 @@ export class AttendancesService {
     monthlyStats.sort((a, b) => a.month.localeCompare(b.month));
 
     return monthlyStats;
+  }
+
+  /**
+   * Registra la asistencia de un usuario a una clase específica.
+   * A diferencia del check-in de gimnasio, no valida si el usuario ya está dentro
+   * ya que puede tomar múltiples clases en el mismo día.
+   */
+  async registerClassAttendance(
+    registerClassDto: RegisterClassAttendanceDto,
+    coach: User,
+  ): Promise<Attendance> {
+    const { userId, classId, notes } = registerClassDto;
+
+    const user = await this.validateUserExists(userId);
+
+    // Validar que la clase existe
+    const classEntity = await this.classRepository.findOne({
+      where: { id: classId },
+    });
+
+    if (!classEntity) {
+      throw new NotFoundException(`Clase con ID '${classId}' no encontrada`);
+    }
+
+    // Validar que la clase esté activa
+    if (!classEntity.isActive) {
+      throw new ForbiddenException(
+        `La clase '${classEntity.name}' no está activa actualmente.`,
+      );
+    }
+
+    // Validar que el usuario tenga pases de clase disponibles
+    const canEnter = await this.validateUserCanEnter(userId, AttendanceType.CLASS);
+    if (!canEnter) {
+      throw new ForbiddenException(
+        `El usuario no tiene pases de clase disponibles.`,
+      );
+    }
+
+    const currentDate = new Date();
+    const dateKey = this.generateDateKey(currentDate);
+
+    const classAttendance = this.attendanceRepository.create({
+      user: user,
+      entranceDatetime: currentDate,
+      type: AttendanceType.CLASS,
+      dateKey,
+      class: classEntity,
+      coach,
+      notes,
+      isActive: false, // Las clases no tienen check-out, marcar como no activo
+    });
+
+    return this.attendanceRepository.save(classAttendance);
+  }
+
+  /**
+   * Obtiene todas las clases registradas por un coach específico.
+   */
+  async getCoachClasses(coachId: string): Promise<Attendance[]> {
+    return this.attendanceRepository.find({
+      where: {
+        coach: { id: coachId },
+        type: AttendanceType.CLASS,
+      },
+      relations: ['user', 'coach'],
+      order: { entranceDatetime: 'DESC' },
+    });
+  }
+
+  /**
+   * Obtiene todas las clases registradas en el día actual.
+   */
+  async getTodayClasses(): Promise<Attendance[]> {
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
+
+    return this.attendanceRepository.find({
+      where: {
+        type: AttendanceType.CLASS,
+        entranceDatetime: Between(startOfDay, endOfDay),
+      },
+      relations: ['user', 'coach'],
+      order: { entranceDatetime: 'DESC' },
+    });
   }
 }

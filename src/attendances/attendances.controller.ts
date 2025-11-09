@@ -12,6 +12,7 @@ import {
 import { AttendancesService } from './attendances.service';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
 import { GetHistoryDto } from './dto/get-history.dto';
+import { RegisterClassAttendanceDto } from './dto/register-class-attendance.dto';
 
 import { Auth } from '../auth/decorators/auth.decorator';
 import { GetUser } from '../auth/decorators/get-user.decorator';
@@ -89,7 +90,7 @@ export class AttendancesController {
    * Obtiene el estado actual de un usuario.
    */
   @Get('status/:userId')
-  @Auth(ValidRoles.admin, ValidRoles.client, ValidRoles.receptionist)
+  @Auth(ValidRoles.admin, ValidRoles.client, ValidRoles.receptionist, ValidRoles.coach)
   @ApiOperation({
     summary: "Get a user's current attendance status (Admin only)",
   })
@@ -105,7 +106,7 @@ export class AttendancesController {
    * Obtiene el historial de asistencias de un usuario.
    */
   @Get('history/:userId')
-  @Auth(ValidRoles.admin, ValidRoles.client, ValidRoles.receptionist)
+  @Auth(ValidRoles.admin, ValidRoles.client, ValidRoles.receptionist,  ValidRoles.coach)
   @ApiOperation({ summary: "Get a user's attendance history (Admin only)" })
   @ApiParam({ name: 'userId', description: 'The UUID of the user' })
   @ApiResponse({ status: 200, description: 'A list of attendance records.' })
@@ -122,7 +123,7 @@ export class AttendancesController {
    * Obtiene las estadísticas de asistencia de un usuario.
    */
   @Get('stats/:userId')
-  @Auth(ValidRoles.admin, ValidRoles.client, ValidRoles.receptionist)
+  @Auth(ValidRoles.admin, ValidRoles.client, ValidRoles.receptionist,  ValidRoles.coach)
   @ApiOperation({ summary: "Get a user's attendance statistics (Admin only)" })
   @ApiParam({ name: 'userId', description: 'The UUID of the user' })
   @ApiResponse({
@@ -139,7 +140,7 @@ export class AttendancesController {
    * Endpoint para que los administradores vean quién está actualmente en las instalaciones.
    */
   @Get('active')
-  @Auth(ValidRoles.admin, ValidRoles.receptionist)
+  @Auth(ValidRoles.admin, ValidRoles.receptionist,  ValidRoles.coach)
   @ApiOperation({ summary: 'Get all users currently checked-in (Admin only)' })
   @ApiResponse({
     status: 200,
@@ -148,5 +149,58 @@ export class AttendancesController {
   @ApiResponse({ status: 403, description: 'Forbidden.' })
   getAllActive() {
     return this.attendanceService.getActiveAttendances();
+  }
+
+  /**
+   * Endpoint para que un coach registre la asistencia a una clase.
+   */
+  @Post('class/register')
+  @HttpCode(HttpStatus.CREATED)
+  @Auth(ValidRoles.coach,  ValidRoles.admin)
+  @ApiOperation({ summary: 'Register class attendance (Coach only)' })
+  @ApiResponse({ status: 201, description: 'Class attendance registered.' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request. User not found or has no active subscription.',
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  registerClassAttendance(
+    @Body() registerClassDto: RegisterClassAttendanceDto,
+    @GetUser() coach: User,
+  ) {
+    return this.attendanceService.registerClassAttendance(
+      registerClassDto,
+      coach,
+    );
+  }
+
+  /**
+   * Endpoint para que un coach vea las clases que ha registrado.
+   */
+  @Get('class/my-classes')
+  @Auth(ValidRoles.coach)
+  @ApiOperation({ summary: "Get coach's registered classes" })
+  @ApiResponse({
+    status: 200,
+    description: 'A list of classes registered by this coach.',
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  getMyClasses(@GetUser() coach: User) {
+    return this.attendanceService.getCoachClasses(coach.id);
+  }
+
+  /**
+   * Endpoint para ver todas las clases registradas hoy.
+   */
+  @Get('class/today')
+  @Auth(ValidRoles.coach, ValidRoles.admin)
+  @ApiOperation({ summary: 'Get all classes registered today' })
+  @ApiResponse({
+    status: 200,
+    description: 'A list of all classes registered today.',
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  getTodayClasses() {
+    return this.attendanceService.getTodayClasses();
   }
 }

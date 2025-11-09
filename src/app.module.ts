@@ -5,6 +5,7 @@ import { MembershipsModule } from './memberships/memberships.module';
 import { AuthModule } from './auth/auth.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { AttendancesModule } from './attendances/attendances.module';
+import { ClassesModule } from './classes/classes.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -37,6 +38,7 @@ import { SeedModule } from './seed/seed.module';
     AuthModule,
     SubscriptionsModule,
     AttendancesModule,
+    ClassesModule,
     SeedModule,
   ],
   controllers: [AppController],

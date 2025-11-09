@@ -8,6 +8,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Membership } from '../memberships/entities/membership.entity';
 import { Subscription } from '../subscriptions/entities/subscription.entity';
 import { SubscriptionItem, SubscriptionItemStatus } from '../subscriptions/entities/subscription-item.entity';
+import { Attendance, AttendanceType } from '../attendances/entities/attendance.entity';
+import { Class } from '../classes/entities/class.entity';
 import { Repository, DataSource } from 'typeorm';
 
 @Injectable()
@@ -21,6 +23,10 @@ export class SeedService {
     private readonly subscriptionRepository: Repository<Subscription>,
     @InjectRepository(SubscriptionItem)
     private readonly subscriptionItemRepository: Repository<SubscriptionItem>,
+    @InjectRepository(Attendance)
+    private readonly attendanceRepository: Repository<Attendance>,
+    @InjectRepository(Class)
+    private readonly classRepository: Repository<Class>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -37,6 +43,8 @@ export class SeedService {
       await this.insertUsers(); // Ahora crea usuarios + suscripciones automáticamente
       await this.insertMemberships();
       await this.insertSubscriptionItems(); // Crear ejemplos de compras de membresías
+      await this.insertClasses(); // Crear clases de ejemplo
+      await this.insertClassAttendances(); // Crear ejemplos de asistencia a clases
 
       return 'SEED EXECUTED SUCCESSFULLY';
     } catch (error) {
@@ -90,6 +98,7 @@ export class SeedService {
         'user',
         'roles',
         'membership',
+        'classes',
       ];
 
       for (const table of tablesToDelete) {
@@ -316,6 +325,178 @@ export class SeedService {
       console.log('✓ All subscription items created successfully');
     } catch (error) {
       console.error('Error inserting subscription items:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Crea clases de ejemplo (Spinning, Yoga, Zumba, CrossFit)
+   */
+  private async insertClasses() {
+    try {
+      const classesData = [
+        {
+          name: 'Spinning 6:00 PM',
+          description: 'Clase de ciclismo indoor de alta intensidad',
+          duration_minutes: 45,
+          max_capacity: 20,
+          isActive: true,
+        },
+        {
+          name: 'Yoga 8:00 AM',
+          description: 'Clase de yoga para todos los niveles',
+          duration_minutes: 60,
+          max_capacity: 15,
+          isActive: true,
+        },
+        {
+          name: 'Zumba 7:00 PM',
+          description: 'Baile fitness con ritmos latinos',
+          duration_minutes: 50,
+          max_capacity: 25,
+          isActive: true,
+        },
+        {
+          name: 'CrossFit 5:00 AM',
+          description: 'Entrenamiento funcional de alta intensidad',
+          duration_minutes: 60,
+          max_capacity: 15,
+          isActive: true,
+        },
+        {
+          name: 'Pilates 10:00 AM',
+          description: 'Ejercicios de fortalecimiento y flexibilidad',
+          duration_minutes: 50,
+          max_capacity: 12,
+          isActive: true,
+        },
+      ];
+
+      for (const classData of classesData) {
+        const existingClass = await this.classRepository.findOne({
+          where: { name: classData.name },
+        });
+
+        if (existingClass) {
+          console.log(`⚠ Class already exists: ${classData.name}`);
+          continue;
+        }
+
+        const classEntity = this.classRepository.create(classData);
+        await this.classRepository.save(classEntity);
+        console.log(`✓ Created class: ${classData.name}`);
+      }
+
+      console.log('✓ All classes created successfully');
+    } catch (error) {
+      console.error('Error inserting classes:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Crea ejemplos de asistencias a clases
+   * Registra varias clases con diferentes usuarios y coaches
+   */
+  private async insertClassAttendances() {
+    try {
+      // Buscar el usuario coach
+      const coachUser = await this.authService.userRepository.findOne({
+        where: { email: 'coach@example.com' },
+      });
+
+      if (!coachUser) {
+        console.log('⚠ Coach user not found, skipping class attendances');
+        return;
+      }
+
+      // Buscar el usuario cliente
+      const clientUser = await this.authService.userRepository.findOne({
+        where: { email: 'client@example.com' },
+      });
+
+      if (!clientUser) {
+        console.log('⚠ Client user not found, skipping class attendances');
+        return;
+      }
+
+      // Buscar las clases
+      const spinningClass = await this.classRepository.findOne({
+        where: { name: 'Spinning 6:00 PM' },
+      });
+      const yogaClass = await this.classRepository.findOne({
+        where: { name: 'Yoga 8:00 AM' },
+      });
+      const zumbaClass = await this.classRepository.findOne({
+        where: { name: 'Zumba 7:00 PM' },
+      });
+      const crossfitClass = await this.classRepository.findOne({
+        where: { name: 'CrossFit 5:00 AM' },
+      });
+
+      if (!spinningClass || !yogaClass || !zumbaClass || !crossfitClass) {
+        console.log('⚠ Some classes not found, skipping class attendances');
+        return;
+      }
+
+      const today = new Date();
+
+      // Helper para generar dateKey
+      const generateDateKey = (date: Date): string => {
+        return date.toISOString().substring(0, 10); // YYYY-MM-DD
+      };
+
+      // Crear varias asistencias a clases de ejemplo
+      const classAttendances = [
+        {
+          user: clientUser,
+          coach: coachUser,
+          type: AttendanceType.CLASS,
+          class: spinningClass,
+          notes: 'Excelente desempeño en la clase de spinning',
+          entranceDatetime: new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000), // Hace 2 días
+          isActive: false,
+        },
+        {
+          user: clientUser,
+          coach: coachUser,
+          type: AttendanceType.CLASS,
+          class: yogaClass,
+          notes: 'Primera clase, buen nivel de flexibilidad',
+          entranceDatetime: new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000), // Hace 1 día
+          isActive: false,
+        },
+        {
+          user: clientUser,
+          coach: coachUser,
+          type: AttendanceType.CLASS,
+          class: zumbaClass,
+          entranceDatetime: today,
+          isActive: false,
+        },
+        {
+          user: clientUser,
+          coach: coachUser,
+          type: AttendanceType.CLASS,
+          class: crossfitClass,
+          notes: 'Completó todos los ejercicios con buena forma',
+          entranceDatetime: today,
+          isActive: false,
+        },
+      ];
+
+      for (const attendanceData of classAttendances) {
+        const attendance = this.attendanceRepository.create({
+          ...attendanceData,
+          dateKey: generateDateKey(attendanceData.entranceDatetime),
+        });
+        await this.attendanceRepository.save(attendance);
+        console.log(`✓ Created class attendance: ${attendanceData.class.name}`);
+      }
+
+      console.log('✓ All class attendances created successfully');
+    } catch (error) {
+      console.error('Error inserting class attendances:', error.message);
       throw error;
     }
   }

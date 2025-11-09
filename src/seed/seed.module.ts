@@ -7,6 +7,8 @@ import { MembershipsModule } from '../memberships/memberships.module';
 import { Membership } from '../memberships/entities/membership.entity';
 import { Subscription } from '../subscriptions/entities/subscription.entity';
 import { SubscriptionItem } from '../subscriptions/entities/subscription-item.entity';
+import { Attendance } from '../attendances/entities/attendance.entity';
+import { Class } from '../classes/entities/class.entity';
 
 @Module({
   controllers: [SeedController],
@@ -14,7 +16,7 @@ import { SubscriptionItem } from '../subscriptions/entities/subscription-item.en
   imports: [
     AuthModule,
     MembershipsModule,
-    TypeOrmModule.forFeature([Membership, Subscription, SubscriptionItem]),
+    TypeOrmModule.forFeature([Membership, Subscription, SubscriptionItem, Attendance, Class]),
   ],
 })
 export class SeedModule {}
