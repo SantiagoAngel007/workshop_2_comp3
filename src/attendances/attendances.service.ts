@@ -35,10 +35,28 @@ export class AttendancesService {
   /**
    * Registra el check-in de un usuario.
    */
-  async checkIn(createAttendanceDto: CreateAttendanceDto): Promise<Attendance> {
+  async checkIn(
+    createAttendanceDto: CreateAttendanceDto,
+    receptionistId?: string,
+  ): Promise<Attendance> {
     const { userId, type } = createAttendanceDto;
 
+    // VALIDACIÓN 1: El recepcionista no puede registrarse a sí mismo
+    if (receptionistId && userId === receptionistId) {
+      throw new ForbiddenException(
+        'No puedes registrar asistencia para ti mismo',
+      );
+    }
+
     const user = await this.validateUserExists(userId);
+
+    // VALIDACIÓN 2: Solo clientes pueden registrar asistencia
+    const userRole = user.roles?.[0]?.name;
+    if (userRole !== 'client') {
+      throw new ForbiddenException(
+        `Solo los clientes pueden registrar asistencias. El usuario tiene rol de ${userRole}`,
+      );
+    }
 
     const isInside = await this.isUserCurrentlyInside(userId);
     if (isInside) {
@@ -137,6 +155,16 @@ export class AttendancesService {
   }
 
   /**
+   * Obtiene todas las asistencias del sistema (para admin).
+   */
+  async findAll(): Promise<Attendance[]> {
+    return this.attendanceRepository.find({
+      relations: ['user'], // Cargamos la relación con el usuario
+      order: { entranceDatetime: 'DESC' },
+    });
+  }
+
+  /**
    * Obtiene todas las asistencias activas actualmente (usuarios que están dentro).
    */
   async getActiveAttendances(): Promise<Attendance[]> {
@@ -215,7 +243,10 @@ export class AttendancesService {
   }
 
   private async validateUserExists(userId: string): Promise<User> {
-    const user = await this.userRepository.findOneBy({ id: userId });
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['roles'], // Cargamos los roles para las validaciones
+    });
     if (!user) {
       throw new NotFoundException(`Usuario con ID '${userId}' no encontrado.`);
     }

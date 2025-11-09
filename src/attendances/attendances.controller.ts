@@ -33,6 +33,18 @@ export class AttendancesController {
   constructor(private readonly attendanceService: AttendancesService) {}
 
   /**
+   * GET /attendances - Obtiene todas las asistencias del sistema
+   */
+  @Get()
+  @Auth(ValidRoles.admin)
+  @ApiOperation({ summary: 'Get all attendances (Admin only)' })
+  @ApiResponse({ status: 200, description: 'A list of all attendances.' })
+  @ApiResponse({ status: 403, description: 'Forbidden. Admin role required.' })
+  async findAll() {
+    return await this.attendanceService.findAll();
+  }
+
+  /**
    * Endpoint para registrar el check-in de un usuario.
    */
   @Post('check-in')
@@ -53,7 +65,7 @@ export class AttendancesController {
     console.log(
       `Check-in realizado por recepcionista: ${receptionist.email} para el usuario: ${createAttendanceDto.userId}`,
     );
-    return this.attendanceService.checkIn(createAttendanceDto);
+    return this.attendanceService.checkIn(createAttendanceDto, receptionist.id);
   }
 
   /**
