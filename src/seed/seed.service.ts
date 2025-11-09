@@ -25,10 +25,10 @@ export class SeedService {
     try {
       // Limpiar en orden correcto (respetando dependencias)
       await this.deleteAllData();
-      
+
       // Insertar nuevos datos
       await this.insertRoles();
-      await this.insertUsers();
+      await this.insertUsers(); // Ahora crea usuarios + suscripciones automáticamente
       await this.insertMemberships();
 
       return 'SEED EXECUTED SUCCESSFULLY';
@@ -128,6 +128,7 @@ export class SeedService {
 
   /**
    * Inserta los usuarios iniciales con sus roles
+   * Usa el método createUserWithRoles del AuthService que automáticamente crea la suscripción
    */
   private async insertUsers() {
     try {
@@ -144,21 +145,18 @@ export class SeedService {
           continue;
         }
 
-        const user = this.authService.userRepository.create({
-          ...rest,
-          password: this.authService.encryptPassword(rest.password),
-        });
-
-        // Asignar roles al usuario
+        // Obtener los roles desde la base de datos
         const assignedRoles = await Promise.all(
           roles.map((roleName) =>
             this.authService.roleRepository.findOneBy({ name: roleName }),
           ),
         );
-        user.roles = assignedRoles.filter(Boolean) as Role[];
 
-        await this.authService.userRepository.save(user);
-        console.log(`✓ Created user: ${rest.email}`);
+        const validRoles = assignedRoles.filter(Boolean) as Role[];
+
+        // Usar el método del AuthService que crea usuario + suscripción
+        await this.authService.createUserWithRoles(rest, validRoles);
+        console.log(`✓ Created user with subscription: ${rest.email}`);
       }
     } catch (error) {
       console.error('Error inserting users:', error.message);

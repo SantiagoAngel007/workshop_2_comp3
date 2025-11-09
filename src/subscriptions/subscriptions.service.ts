@@ -79,12 +79,7 @@ export class SubscriptionsService {
 
     // Crear nueva subscripción vacía (sin membresías inicialmente)
     const newSubscription = this.subscriptionRepository.create({
-      name: `Subscription for ${user.fullName}`,
-      cost: 0,
-      max_classes_assistance: 0,
-      max_gym_assistance: 0,
-      duration_months: 0,
-      purchase_date: new Date(),
+      start_date: new Date(),
       isActive: true,
       user,
       memberships: [],
@@ -102,12 +97,12 @@ export class SubscriptionsService {
   ): Promise<Subscription> {
     const { membershipId } = addMembershipDto;
 
-    // Buscar la membresía plantilla
-    const membershipTemplate = await this.membershipRepository.findOne({
+    // Buscar la membresía
+    const membership = await this.membershipRepository.findOne({
       where: { id: membershipId },
     });
 
-    if (!membershipTemplate) {
+    if (!membership) {
       throw new NotFoundException('Membership not found');
     }
 
@@ -121,22 +116,19 @@ export class SubscriptionsService {
       throw new NotFoundException('Subscription not found');
     }
 
-    // Agregar la membresía a la subscripción
-    subscription.memberships.push(membershipTemplate);
-
-    // Actualizar los valores de la subscripción con los de la nueva membresía
-    subscription.cost =
-      Number(subscription.cost) + Number(membershipTemplate.cost);
-    subscription.max_classes_assistance =
-      Number(subscription.max_classes_assistance) +
-      Number(membershipTemplate.max_classes_assistance);
-    subscription.max_gym_assistance =
-      Number(subscription.max_gym_assistance) +
-      Number(membershipTemplate.max_gym_assistance);
-    subscription.duration_months = Math.max(
-      subscription.duration_months,
-      membershipTemplate.duration_months,
+    // Verificar si la membresía ya está agregada
+    const alreadyAdded = subscription.memberships.some(
+      (m) => m.id === membershipId,
     );
+
+    if (alreadyAdded) {
+      throw new ConflictException(
+        'Esta membresía ya está agregada a la subscripción',
+      );
+    }
+
+    // Agregar la membresía a la subscripción
+    subscription.memberships.push(membership);
 
     return await this.subscriptionRepository.save(subscription);
   }

@@ -15,23 +15,8 @@ export class Subscription {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column('text', { unique: true })
-  name: string;
-
-  @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
-  cost: number;
-
-  @Column('int')
-  max_classes_assistance: number;
-
-  @Column('int')
-  max_gym_assistance: number;
-
-  @Column('int')
-  duration_months: number;
-
   @Column('date')
-  purchase_date: Date;
+  start_date: Date;
 
   @Column('bool', { default: true })
   isActive: boolean;

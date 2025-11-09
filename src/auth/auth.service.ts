@@ -232,6 +232,48 @@ export class AuthService {
     }
   }
 
+  /**
+   * Método especial para crear usuarios con roles personalizados (usado por el seed)
+   * Crea el usuario, asigna los roles especificados, y crea una suscripción automáticamente
+   */
+  async createUserWithRoles(
+    userData: {
+      email: string;
+      fullName: string;
+      age: number;
+      password: string;
+    },
+    roles: Role[],
+  ) {
+    const { password, ...rest } = userData;
+
+    const user = this.userRepository.create({
+      ...rest,
+      password: this.encryptPassword(password),
+    });
+
+    user.roles = roles;
+
+    try {
+      await this.userRepository.save(user);
+
+      // Crear subscripción vacía automáticamente
+      try {
+        await this.subscriptionsService.createSubscriptionForUser(user.id);
+      } catch (subscriptionError) {
+        this.logger.error(
+          `Failed to create subscription for user ${user.id} during seed`,
+          subscriptionError.stack,
+        );
+        throw subscriptionError;
+      }
+
+      return user;
+    } catch (error) {
+      this.handleException(error);
+    }
+  }
+
   encryptPassword(password: string): string {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return bcrypt.hashSync(password, 10);
