@@ -34,7 +34,7 @@ export class SubscriptionsController {
    * Obtiene la subscripción de un usuario por su ID
    */
   @Get('user/:userId')
-  @Auth(ValidRoles.admin, ValidRoles.receptionist)
+  @Auth(ValidRoles.admin, ValidRoles.receptionist, ValidRoles.client)
   @ApiOperation({ summary: "Get a user's subscription by their User ID" })
   @ApiParam({ name: 'userId', description: 'The ID of the user' })
   @ApiResponse({ status: 200, description: 'Subscription found.' })
@@ -53,7 +53,7 @@ export class SubscriptionsController {
    * Body: { userId: string }
    */
   @Post()
-  @Auth(ValidRoles.admin, ValidRoles.receptionist)
+  @Auth(ValidRoles.admin, ValidRoles.receptionist, ValidRoles.client)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new subscription for a user' })
   @ApiBody({
@@ -82,7 +82,7 @@ export class SubscriptionsController {
    * Body: { membershipId: string }
    */
   @Post(':id/memberships')
-  @Auth(ValidRoles.admin, ValidRoles.receptionist)
+  @Auth(ValidRoles.admin, ValidRoles.receptionist, ValidRoles.client)
   @ApiOperation({ summary: 'Add a membership to an existing subscription' })
   @ApiParam({ name: 'id', description: 'The ID of the subscription' })
   @ApiResponse({ status: 200, description: 'Membership added successfully.' })

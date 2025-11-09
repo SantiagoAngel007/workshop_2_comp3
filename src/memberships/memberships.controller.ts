@@ -29,7 +29,7 @@ export class MembershipsController {
   constructor(private readonly membershipsService: MembershipsService) {}
 
   @Get()
-  @Auth(ValidRoles.admin, ValidRoles.receptionist)
+  @Auth(ValidRoles.admin, ValidRoles.receptionist, ValidRoles.client)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get all memberships' })
   @ApiResponse({ status: 200, description: 'List of all memberships.' })
@@ -39,7 +39,7 @@ export class MembershipsController {
   }
 
   @Get(':id')
-  @Auth(ValidRoles.admin, ValidRoles.receptionist, ValidRoles.coach)
+  @Auth(ValidRoles.admin, ValidRoles.receptionist, ValidRoles.coach, ValidRoles.client)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get a membership by its ID' })
   @ApiResponse({ status: 200, description: 'Membership found.' })
