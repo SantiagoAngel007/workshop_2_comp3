@@ -274,6 +274,168 @@ export class AuthService {
     }
   }
 
+  /**
+   * Assigns roles to a user, replacing their current roles
+   * If the user ends up with no roles after deletion, the 'client' role is assigned automatically
+   */
+  async assignRoles(userId: string, roleNames: ValidRoles[]) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['roles'],
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    // Prevent assigning roles if the user is the last admin
+    if (
+      roleNames.every((role) => role !== ValidRoles.admin) &&
+      user.roles.some((role) => role.name === ValidRoles.admin)
+    ) {
+      const adminCount = await this.userRepository
+        .createQueryBuilder('user')
+        .innerJoin('user.roles', 'role')
+        .where('role.name = :role', { role: ValidRoles.admin })
+        .getCount();
+
+      if (adminCount <= 1) {
+        throw new BadRequestException(
+          'Cannot remove admin role from the last admin user',
+        );
+      }
+    }
+
+    // Fetch the requested roles from database
+    const roles = await Promise.all(
+      roleNames.map((roleName) =>
+        this.roleRepository.findOneBy({ name: roleName }),
+      ),
+    );
+
+    // Check if all requested roles exist
+    const notFoundRoles = roleNames.filter(
+      (roleName, index) => !roles[index],
+    );
+    if (notFoundRoles.length > 0) {
+      throw new NotFoundException(
+        `The following roles were not found: ${notFoundRoles.join(', ')}`,
+      );
+    }
+
+    user.roles = roles.filter((role) => role !== null);
+
+    try {
+      await this.userRepository.save(user);
+      return this.findOne(userId);
+    } catch (error) {
+      this.handleException(error);
+    }
+  }
+
+  /**
+   * Adds one or more roles to a user without removing existing ones
+   */
+  async addRolesToUser(userId: string, roleNames: ValidRoles[]) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['roles'],
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    // Fetch the roles to add
+    const rolesToAdd = await Promise.all(
+      roleNames.map((roleName) =>
+        this.roleRepository.findOneBy({ name: roleName }),
+      ),
+    );
+
+    // Check if all requested roles exist
+    const notFoundRoles = roleNames.filter(
+      (roleName, index) => !rolesToAdd[index],
+    );
+    if (notFoundRoles.length > 0) {
+      throw new NotFoundException(
+        `The following roles were not found: ${notFoundRoles.join(', ')}`,
+      );
+    }
+
+    // Add roles that the user doesn't already have
+    const existingRoleNames = user.roles.map((role) => role.name);
+    const newRoles = rolesToAdd.filter(
+      (role) => role !== null && !existingRoleNames.includes(role.name),
+    ) as Role[];
+
+    user.roles = [...user.roles, ...newRoles];
+
+    try {
+      await this.userRepository.save(user);
+      return this.findOne(userId);
+    } catch (error) {
+      this.handleException(error);
+    }
+  }
+
+  /**
+   * Removes one or more roles from a user
+   * If the user ends up with no roles, the 'client' role is automatically assigned
+   */
+  async removeRolesFromUser(userId: string, roleNames: ValidRoles[]) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['roles'],
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    // Prevent removing admin role if this is the last admin
+    if (roleNames.includes(ValidRoles.admin)) {
+      const adminCount = await this.userRepository
+        .createQueryBuilder('user')
+        .innerJoin('user.roles', 'role')
+        .where('role.name = :role', { role: ValidRoles.admin })
+        .getCount();
+
+      if (adminCount <= 1 && user.roles.some((r) => r.name === ValidRoles.admin)) {
+        throw new BadRequestException(
+          'Cannot remove admin role from the last admin user',
+        );
+      }
+    }
+
+    // Remove the specified roles
+    user.roles = user.roles.filter(
+      (role) => !roleNames.includes(role.name),
+    );
+
+    // If user has no roles left, assign the default 'client' role
+    if (user.roles.length === 0) {
+      const defaultRole = await this.roleRepository.findOneBy({
+        name: ValidRoles.client,
+      });
+
+      if (!defaultRole) {
+        throw new InternalServerErrorException(
+          'Default role "client" not found',
+        );
+      }
+
+      user.roles = [defaultRole];
+    }
+
+    try {
+      await this.userRepository.save(user);
+      return this.findOne(userId);
+    } catch (error) {
+      this.handleException(error);
+    }
+  }
+
   encryptPassword(password: string): string {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return bcrypt.hashSync(password, 10);

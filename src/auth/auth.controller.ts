@@ -13,6 +13,7 @@ import { AuthService } from './auth.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { LoginDto } from './dto/login.dto';
+import { AssignRolesDto } from './dto/assign-roles.dto';
 import { Auth } from './decorators/auth.decorator';
 import { ValidRoles } from './enums/roles.enum';
 import { GetUser } from './decorators/get-user.decorator';
@@ -106,5 +107,79 @@ export class AuthController {
   @ApiResponse({ status: 404, description: 'User not found.' })
   remove(@Param('id') id: string) {
     return this.authService.remove(id);
+  }
+
+  @Patch(':id/roles/assign')
+  @ApiBearerAuth()
+  @Auth(ValidRoles.admin)
+  @ApiOperation({
+    summary: 'Assign roles to a user (Admin only)',
+    description:
+      'Replace all roles of a user with the provided roles. If no roles are provided, the user will be assigned the default "client" role.',
+  })
+  @ApiParam({ name: 'id', description: 'The ID of the user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Roles successfully assigned to the user.',
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden. Admin role required.' })
+  @ApiResponse({ status: 404, description: 'User or role not found.' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request. Cannot remove admin role from last admin.',
+  })
+  assignRoles(
+    @Param('id') id: string,
+    @Body() assignRolesDto: AssignRolesDto,
+  ) {
+    return this.authService.assignRoles(id, assignRolesDto.roles);
+  }
+
+  @Patch(':id/roles/add')
+  @ApiBearerAuth()
+  @Auth(ValidRoles.admin)
+  @ApiOperation({
+    summary: 'Add roles to a user (Admin only)',
+    description:
+      'Add one or more roles to a user without removing their existing roles.',
+  })
+  @ApiParam({ name: 'id', description: 'The ID of the user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Roles successfully added to the user.',
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden. Admin role required.' })
+  @ApiResponse({ status: 404, description: 'User or role not found.' })
+  addRoles(
+    @Param('id') id: string,
+    @Body() assignRolesDto: AssignRolesDto,
+  ) {
+    return this.authService.addRolesToUser(id, assignRolesDto.roles);
+  }
+
+  @Patch(':id/roles/remove')
+  @ApiBearerAuth()
+  @Auth(ValidRoles.admin)
+  @ApiOperation({
+    summary: 'Remove roles from a user (Admin only)',
+    description:
+      'Remove one or more roles from a user. If the user has no roles after removal, the default "client" role will be automatically assigned.',
+  })
+  @ApiParam({ name: 'id', description: 'The ID of the user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Roles successfully removed from the user.',
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden. Admin role required.' })
+  @ApiResponse({ status: 404, description: 'User or role not found.' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request. Cannot remove admin role from last admin.',
+  })
+  removeRoles(
+    @Param('id') id: string,
+    @Body() assignRolesDto: AssignRolesDto,
+  ) {
+    return this.authService.removeRolesFromUser(id, assignRolesDto.roles);
   }
 }
