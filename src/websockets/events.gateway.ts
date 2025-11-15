@@ -71,4 +71,23 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.logger.warn(`User ${userId} not connected via WebSocket`);
     }
   }
+
+  /**
+   * Notifica a un usuario que su estado de activación cambió
+   */
+  notifyUserStatusChange(userId: string, isActive: boolean) {
+    const socketId = this.userSockets.get(userId);
+
+    if (socketId) {
+      this.logger.log(`Notifying user ${userId} about status change: isActive=${isActive}`);
+      this.server.to(socketId).emit('userStatusChanged', {
+        isActive,
+        message: isActive
+          ? 'Tu cuenta ha sido reactivada'
+          : 'Tu cuenta ha sido desactivada',
+      });
+    } else {
+      this.logger.warn(`User ${userId} not connected via WebSocket`);
+    }
+  }
 }

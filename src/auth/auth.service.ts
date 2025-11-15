@@ -235,6 +235,52 @@ export class AuthService {
   }
 
   /**
+   * Activa o desactiva un usuario (toggle isActive)
+   */
+  async toggleUserActive(id: string, isActive: boolean) {
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: ['roles'],
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    // Prevenir desactivar al último admin
+    if (!isActive) {
+      const isAdmin = user.roles.some((role) => role.name === 'admin');
+      if (isAdmin) {
+        const adminCount = await this.userRepository
+          .createQueryBuilder('user')
+          .innerJoin('user.roles', 'role')
+          .where('role.name = :role', { role: 'admin' })
+          .where('user.isActive = :isActive', { isActive: true })
+          .getCount();
+
+        if (adminCount <= 1) {
+          throw new BadRequestException(
+            'Cannot deactivate the last active admin user',
+          );
+        }
+      }
+    }
+
+    user.isActive = isActive;
+
+    try {
+      const updatedUser = await this.userRepository.save(user);
+
+      // Notificar al usuario vía WebSocket sobre el cambio de estado
+      this.eventsGateway.notifyUserStatusChange(id, isActive);
+
+      return this.findOne(updatedUser.id);
+    } catch (error) {
+      this.handleException(error);
+    }
+  }
+
+  /**
    * Método especial para crear usuarios con roles personalizados (usado por el seed)
    * Crea el usuario, asigna los roles especificados, y crea una suscripción automáticamente
    */

@@ -121,6 +121,28 @@ export class AuthController {
     return this.authService.remove(id);
   }
 
+  @Patch(':id/toggle-active')
+  @ApiBearerAuth()
+  @Auth(ValidRoles.admin)
+  @ApiOperation({ summary: 'Activate or deactivate a user (Admin only)' })
+  @ApiParam({ name: 'id', description: 'The ID of the user' })
+  @ApiResponse({
+    status: 200,
+    description: 'User status successfully changed.',
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden. Admin role required.' })
+  @ApiResponse({ status: 404, description: 'User not found.' })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request. Cannot deactivate last admin.',
+  })
+  toggleUserActive(
+    @Param('id') id: string,
+    @Body() body: { isActive: boolean },
+  ) {
+    return this.authService.toggleUserActive(id, body.isActive);
+  }
+
   @Patch(':id/roles/assign')
   @ApiBearerAuth()
   @Auth(ValidRoles.admin)
