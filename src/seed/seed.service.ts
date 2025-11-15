@@ -7,8 +7,14 @@ import { membershipsSeedData } from './data/seed-memberships.data';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Membership } from '../memberships/entities/membership.entity';
 import { Subscription } from '../subscriptions/entities/subscription.entity';
-import { SubscriptionItem, SubscriptionItemStatus } from '../subscriptions/entities/subscription-item.entity';
-import { Attendance, AttendanceType } from '../attendances/entities/attendance.entity';
+import {
+  SubscriptionItem,
+  SubscriptionItemStatus,
+} from '../subscriptions/entities/subscription-item.entity';
+import {
+  Attendance,
+  AttendanceType,
+} from '../attendances/entities/attendance.entity';
 import { Class } from '../classes/entities/class.entity';
 import { Repository, DataSource } from 'typeorm';
 
@@ -107,7 +113,9 @@ export class SeedService {
           console.log(`✓ Truncated table: ${table}`);
         } catch (error) {
           // Tabla no existe, continuar
-          console.log(`⚠ Table ${table} does not exist or could not be truncated`);
+          console.log(
+            `⚠ Table ${table} does not exist or could not be truncated`,
+          );
         }
       }
     } catch (error) {
@@ -187,10 +195,9 @@ export class SeedService {
     try {
       for (const membershipData of membershipsSeedData) {
         // Verificar si la membresía ya existe (por nombre o ID único)
-        const existingMembership =
-          await this.membershipRepository.findOneBy({
-            name: membershipData.name,
-          });
+        const existingMembership = await this.membershipRepository.findOneBy({
+          name: membershipData.name,
+        });
 
         if (existingMembership) {
           console.log(`⚠ Membership already exists: ${membershipData.name}`);
@@ -229,7 +236,9 @@ export class SeedService {
       });
 
       if (!subscription) {
-        console.log('⚠ Subscription not found for client, skipping subscription items');
+        console.log(
+          '⚠ Subscription not found for client, skipping subscription items',
+        );
         return;
       }
 
@@ -269,7 +278,9 @@ export class SeedService {
         status: SubscriptionItemStatus.EXPIRED,
       });
       await this.subscriptionItemRepository.save(expiredItem);
-      console.log(`✓ Created EXPIRED subscription item: ${expiredMembership.name}`);
+      console.log(
+        `✓ Created EXPIRED subscription item: ${expiredMembership.name}`,
+      );
 
       // 2. Membresía ACTIVA (comprada hace 1 mes, termina en 11 meses)
       const activeMembership = memberships[1];
@@ -287,7 +298,9 @@ export class SeedService {
         status: SubscriptionItemStatus.ACTIVE,
       });
       await this.subscriptionItemRepository.save(activeItem);
-      console.log(`✓ Created ACTIVE subscription item: ${activeMembership.name}`);
+      console.log(
+        `✓ Created ACTIVE subscription item: ${activeMembership.name}`,
+      );
 
       // 3. Membresía PENDIENTE #1 (comienza cuando expire la activa)
       const pending1Membership = memberships[2];
@@ -305,7 +318,9 @@ export class SeedService {
         status: SubscriptionItemStatus.PENDING,
       });
       await this.subscriptionItemRepository.save(pending1Item);
-      console.log(`✓ Created PENDING subscription item: ${pending1Membership.name}`);
+      console.log(
+        `✓ Created PENDING subscription item: ${pending1Membership.name}`,
+      );
 
       // 4. Membresía PENDIENTE #2 (comienza después de la pendiente #1)
       const pending2Membership = memberships[3];
@@ -319,11 +334,18 @@ export class SeedService {
         duration_months: pending2Membership.duration_months,
         purchase_date: today,
         start_date: addMonths(today, 11 + pending1Membership.duration_months),
-        end_date: addMonths(today, 11 + pending1Membership.duration_months + pending2Membership.duration_months),
+        end_date: addMonths(
+          today,
+          11 +
+            pending1Membership.duration_months +
+            pending2Membership.duration_months,
+        ),
         status: SubscriptionItemStatus.PENDING,
       });
       await this.subscriptionItemRepository.save(pending2Item);
-      console.log(`✓ Created PENDING subscription item: ${pending2Membership.name}`);
+      console.log(
+        `✓ Created PENDING subscription item: ${pending2Membership.name}`,
+      );
 
       console.log('✓ All subscription items created successfully');
     } catch (error) {

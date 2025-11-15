@@ -41,6 +41,13 @@ export const initialData: SeedData = {
       roles: [ValidRoles.client],
     },
     {
+      email: 'client2@example.com',
+      fullName: 'Client2 User',
+      age: 25,
+      password: 'client123',
+      roles: [ValidRoles.client],
+    },
+    {
       email: 'receptionist@example.com',
       fullName: 'Receptionist User',
       age: 27,
