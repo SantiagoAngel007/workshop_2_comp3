@@ -22,6 +22,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Role } from './entities/roles.entity';
 import { ValidRoles } from './enums/roles.enum';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { EventsGateway } from '../websockets/events.gateway';
 
 @Injectable()
 export class AuthService {
@@ -35,6 +36,7 @@ export class AuthService {
     public readonly jwtService: JwtService,
     @Inject(forwardRef(() => SubscriptionsService))
     private readonly subscriptionsService: SubscriptionsService,
+    private readonly eventsGateway: EventsGateway,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -327,6 +329,10 @@ export class AuthService {
 
     try {
       await this.userRepository.save(user);
+
+      // Notificar al usuario vía WebSocket sobre el cambio de roles
+      this.eventsGateway.notifyRoleChange(userId, user.roles);
+
       return this.findOne(userId);
     } catch (error) {
       this.handleException(error);
@@ -373,6 +379,10 @@ export class AuthService {
 
     try {
       await this.userRepository.save(user);
+
+      // Notificar al usuario vía WebSocket sobre el cambio de roles
+      this.eventsGateway.notifyRoleChange(userId, user.roles);
+
       return this.findOne(userId);
     } catch (error) {
       this.handleException(error);
@@ -430,6 +440,10 @@ export class AuthService {
 
     try {
       await this.userRepository.save(user);
+
+      // Notificar al usuario vía WebSocket sobre el cambio de roles
+      this.eventsGateway.notifyRoleChange(userId, user.roles);
+
       return this.findOne(userId);
     } catch (error) {
       this.handleException(error);

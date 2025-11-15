@@ -9,6 +9,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
+import { WebsocketsModule } from '../websockets/websockets.module';
 
 @Module({
   controllers: [AuthController],
@@ -25,6 +26,7 @@ import { SubscriptionsModule } from '../subscriptions/subscriptions.module';
       }),
     }),
     forwardRef(() => SubscriptionsModule),
+    WebsocketsModule,
   ],
   providers: [AuthService, JwtStrategy],
   exports: [AuthService, JwtModule, TypeOrmModule, PassportModule, JwtStrategy],

@@ -362,7 +362,22 @@ export class AttendancesService {
   ): Promise<Attendance> {
     const { userId, classId, notes } = registerClassDto;
 
+    // VALIDACIÓN 1: El coach no puede registrarse a sí mismo
+    if (userId === coach.id) {
+      throw new ForbiddenException(
+        'No puedes registrar asistencia para ti mismo',
+      );
+    }
+
     const user = await this.validateUserExists(userId);
+
+    // VALIDACIÓN 2: Solo clientes pueden ser registrados en clases
+    const userRole = user.roles?.[0]?.name;
+    if (userRole !== 'client') {
+      throw new ForbiddenException(
+        `Solo los clientes pueden ser registrados en clases. El usuario tiene rol de ${userRole}`,
+      );
+    }
 
     // Validar que la clase existe
     const classEntity = await this.classRepository.findOne({

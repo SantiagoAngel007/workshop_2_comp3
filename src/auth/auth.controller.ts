@@ -54,6 +54,18 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  @Get('me')
+  @ApiBearerAuth()
+  @Auth()
+  @ApiOperation({ summary: 'Get current authenticated user data' })
+  @ApiResponse({ status: 200, description: 'Current user data.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  getCurrentUser(@GetUser() user: User) {
+    // Retornar el usuario sin el password
+    const { password, ...userData } = user;
+    return userData;
+  }
+
   @Get()
   @ApiBearerAuth()
   @Auth(ValidRoles.admin, ValidRoles.receptionist, ValidRoles.coach)

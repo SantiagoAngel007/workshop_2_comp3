@@ -10,6 +10,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SeedModule } from './seed/seed.module';
+import { WebsocketsModule } from './websockets/websockets.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { SeedModule } from './seed/seed.module';
     AttendancesModule,
     ClassesModule,
     SeedModule,
+    WebsocketsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
