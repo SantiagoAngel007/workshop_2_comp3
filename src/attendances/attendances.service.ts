@@ -55,7 +55,14 @@ export class AttendancesService {
 
     const user = await this.validateUserExists(userId);
 
-    // VALIDACIÓN 2: Solo clientes pueden registrar asistencia
+    // VALIDACIÓN 2: El usuario debe estar activo
+    if (!user.isActive) {
+      throw new ForbiddenException(
+        'El usuario está desactivado y no puede registrar asistencia',
+      );
+    }
+
+    // VALIDACIÓN 3: Solo clientes pueden registrar asistencia
     const userRole = user.roles?.[0]?.name;
     if (userRole !== 'client') {
       throw new ForbiddenException(
@@ -94,7 +101,14 @@ export class AttendancesService {
    * Registra el check-out de un usuario.
    */
   async checkOut(userId: string): Promise<Attendance> {
-    await this.validateUserExists(userId);
+    const user = await this.validateUserExists(userId);
+
+    // VALIDACIÓN: El usuario debe estar activo
+    if (!user.isActive) {
+      throw new ForbiddenException(
+        'El usuario está desactivado y no puede realizar check-out',
+      );
+    }
 
     const activeAttendance = await this.findActiveAttendanceByUserId(userId);
     if (!activeAttendance) {
@@ -371,7 +385,14 @@ export class AttendancesService {
 
     const user = await this.validateUserExists(userId);
 
-    // VALIDACIÓN 2: Solo clientes pueden ser registrados en clases
+    // VALIDACIÓN 2: El usuario debe estar activo
+    if (!user.isActive) {
+      throw new ForbiddenException(
+        'El usuario está desactivado y no puede registrarse en clases',
+      );
+    }
+
+    // VALIDACIÓN 3: Solo clientes pueden ser registrados en clases
     const userRole = user.roles?.[0]?.name;
     if (userRole !== 'client') {
       throw new ForbiddenException(
