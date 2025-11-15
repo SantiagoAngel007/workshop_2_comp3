@@ -6,8 +6,11 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { Attendance } from '../../attendances/entities/attendance.entity';
+import { User } from '../../auth/entities/users.entity';
 
 @Entity('classes')
 export class Class {
@@ -28,6 +31,10 @@ export class Class {
 
   @Column('boolean', { default: true })
   isActive: boolean;
+
+  @ManyToOne(() => User, { eager: true })
+  @JoinColumn({ name: 'created_by_id' })
+  createdBy: User;
 
   @OneToMany('Attendance', 'class')
   attendances: Attendance[];

@@ -14,6 +14,8 @@ import { ClassesService } from './classes.service';
 import { CreateClassDto } from './dto/create-class.dto';
 import { UpdateClassDto } from './dto/update-class.dto';
 import { Auth } from '../auth/decorators/auth.decorator';
+import { GetUser } from '../auth/decorators/get-user.decorator';
+import { User } from '../auth/entities/users.entity';
 import { ValidRoles } from '../auth/enums/roles.enum';
 import {
   ApiTags,
@@ -46,8 +48,8 @@ export class ClassesController {
     description: 'Conflict. A class with this name already exists.',
   })
   @ApiResponse({ status: 403, description: 'Forbidden.' })
-  create(@Body() createClassDto: CreateClassDto) {
-    return this.classesService.create(createClassDto);
+  create(@Body() createClassDto: CreateClassDto, @GetUser() user: User) {
+    return this.classesService.create(createClassDto, user);
   }
 
   /**
@@ -103,21 +105,22 @@ export class ClassesController {
     status: 409,
     description: 'Conflict. A class with this name already exists.',
   })
-  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 403, description: 'Forbidden. Not the creator or not admin.' })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateClassDto: UpdateClassDto,
+    @GetUser() user: User,
   ) {
-    return this.classesService.update(id, updateClassDto);
+    return this.classesService.update(id, updateClassDto, user);
   }
 
   /**
-   * Activa o desactiva una clase (Admin solo)
+   * Activa o desactiva una clase (Coach puede desactivar solo si no tiene asistencias, Admin siempre puede)
    */
   @Patch(':id/toggle-active')
-  @Auth(ValidRoles.admin)
+  @Auth(ValidRoles.coach, ValidRoles.admin)
   @ApiOperation({
-    summary: 'Toggle class active status (Admin only)',
+    summary: 'Toggle class active status (Coach & Admin)',
   })
   @ApiParam({ name: 'id', description: 'The UUID of the class' })
   @ApiResponse({
@@ -125,31 +128,34 @@ export class ClassesController {
     description: 'Class active status toggled successfully.',
   })
   @ApiResponse({ status: 404, description: 'Class not found.' })
-  @ApiResponse({ status: 403, description: 'Forbidden.' })
-  toggleActive(@Param('id', ParseUUIDPipe) id: string) {
-    return this.classesService.toggleActive(id);
+  @ApiResponse({ status: 400, description: 'Cannot deactivate class with attendances (Coach only).' })
+  @ApiResponse({ status: 403, description: 'Forbidden. Not the creator or not admin.' })
+  toggleActive(@Param('id', ParseUUIDPipe) id: string, @GetUser() user: User) {
+    return this.classesService.toggleActive(id, user);
   }
 
   /**
-   * Elimina una clase (Admin solo, solo si no tiene asistencias)
+   * Elimina una clase
+   * Coach: solo puede eliminar sus clases si no tienen asistencias
+   * Admin: puede eliminar cualquier clase
    */
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @Auth(ValidRoles.admin)
+  @Auth(ValidRoles.coach, ValidRoles.admin)
   @ApiOperation({
     summary:
-      'Delete a class (Admin only, only if no attendance records exist)',
+      'Delete a class (Coach can delete own classes without attendances, Admin can delete any)',
   })
   @ApiParam({ name: 'id', description: 'The UUID of the class to delete' })
   @ApiResponse({ status: 204, description: 'Class deleted successfully.' })
   @ApiResponse({ status: 404, description: 'Class not found.' })
   @ApiResponse({
-    status: 409,
+    status: 400,
     description:
-      'Conflict. Cannot delete class with existing attendance records.',
+      'Bad Request. Cannot delete class with existing attendance records (Coach only).',
   })
-  @ApiResponse({ status: 403, description: 'Forbidden.' })
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.classesService.remove(id);
+  @ApiResponse({ status: 403, description: 'Forbidden. Not the creator or not admin.' })
+  remove(@Param('id', ParseUUIDPipe) id: string, @GetUser() user: User) {
+    return this.classesService.remove(id, user);
   }
 }
