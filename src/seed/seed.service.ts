@@ -241,12 +241,15 @@ export class SeedService {
         return;
       }
 
+      // Normalizar fecha a medianoche para evitar problemas de zona horaria
       const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
       // Helper para sumar/restar meses
       const addMonths = (date: Date, months: number): Date => {
         const result = new Date(date);
         result.setMonth(result.getMonth() + months);
+        result.setHours(0, 0, 0, 0);
         return result;
       };
 
@@ -439,7 +442,9 @@ export class SeedService {
         return;
       }
 
+      // Normalizar fecha a medianoche para evitar problemas de zona horaria
       const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
       // Helper para generar dateKey
       const generateDateKey = (date: Date): string => {

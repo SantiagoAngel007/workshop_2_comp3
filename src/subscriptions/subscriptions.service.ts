@@ -83,7 +83,7 @@ export class SubscriptionsService {
 
     // Crear nueva subscripción vacía (sin items inicialmente)
     const newSubscription = this.subscriptionRepository.create({
-      start_date: new Date(),
+      start_date: this.getTodayNormalized(),
       isActive: true,
       user,
     });
@@ -129,7 +129,7 @@ export class SubscriptionsService {
       order: { end_date: 'DESC' },
     });
 
-    const today = new Date();
+    const today = this.getTodayNormalized();
     let startDate: Date;
     let endDate: Date;
     let status: SubscriptionItemStatus;
@@ -141,8 +141,9 @@ export class SubscriptionsService {
       status = SubscriptionItemStatus.ACTIVE;
     } else {
       // CASO 2: Ya tiene uno activo - Programar para después
-      startDate = activeItem.end_date;
-      endDate = this.addMonths(activeItem.end_date, membership.duration_months);
+      startDate = new Date(activeItem.end_date);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = this.addMonths(startDate, membership.duration_months);
       status = SubscriptionItemStatus.PENDING;
     }
 
@@ -167,11 +168,22 @@ export class SubscriptionsService {
   }
 
   /**
+   * Obtiene la fecha de hoy normalizada a medianoche (hora local)
+   * Esto evita problemas de zona horaria al guardar en PostgreSQL
+   */
+  private getTodayNormalized(): Date {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  }
+
+  /**
    * Suma meses a una fecha
    */
   private addMonths(date: Date, months: number): Date {
     const result = new Date(date);
     result.setMonth(result.getMonth() + months);
+    result.setHours(0, 0, 0, 0); // Normalizar a medianoche
     return result;
   }
 
@@ -221,8 +233,7 @@ export class SubscriptionsService {
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleMembershipExpiration() {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalizar a medianoche
+    const today = this.getTodayNormalized();
 
     console.log(`[CRON] Checking for expired memberships at ${today.toISOString()}`);
 
