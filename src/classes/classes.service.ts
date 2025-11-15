@@ -69,7 +69,7 @@ export class ClassesService {
   async findOne(id: string): Promise<Class> {
     const classEntity = await this.classRepository.findOne({
       where: { id },
-      relations: ['attendances'],
+      relations: ['attendances', 'createdBy'],
     });
 
     if (!classEntity) {
